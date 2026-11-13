@@ -74,13 +74,7 @@ fun TeamCreatorrRoot() {
     val currentRoute = backStackEntry?.destination?.route
 
     Box(Modifier.fillMaxSize()) {
-        Box(
-            Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .navigationBarsPadding()
-                .padding(bottom = 76.dp)
-        ) {
+        Box(Modifier.fillMaxSize().statusBarsPadding()) {
             AppNavHost(navController)
         }
         FloatingPillNavBar(

@@ -57,7 +57,7 @@ fun RankingScreen(onOpenPlayer: (Long) -> Unit) {
                 )
             }
         } else {
-            LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(vertical = 8.dp)) {
+            LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = 8.dp, bottom = 96.dp)) {
                 item { TableHeader() }
                 items(ranking, key = { it.playerId }) { stats ->
                     TableRow(stats, onClick = { onOpenPlayer(stats.playerId) })

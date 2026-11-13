@@ -4,6 +4,15 @@ Alle noemenswaardige wijzigingen aan TeamCreatorr worden hier bijgehouden.
 
 Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1.0/).
 
+## [1.4.0] - 2026-11-13
+
+### Toegevoegd
+- Ko-fi-vermelding (Engelstalig, vaste tekst) in Instellingen en op GitHub.
+- Professionele README met verwijzingen naar Documentation, Guides en Download.
+
+### Gewijzigd
+- Floating menu is nu een echte overlay: de pagina gebruikt het volledige scherm en aanrakingen buiten de zichtbare menu-elementen komen bij de onderliggende pagina terecht.
+
 ## [1.3.1] - 2026-11-13
 
 ### Opgelost

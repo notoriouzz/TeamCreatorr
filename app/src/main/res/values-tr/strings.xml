@@ -158,8 +158,11 @@
     <string name="settings_donate_title">Geliştiriciyi destekle</string>
     <string name="settings_donate_text">Uygulamayı beğendiniz mi? Geliştiriciye bir kahve ısmarlayın! ☕ Böylece yeni özellikler geliştirmeye keyifle devam ederim.</string>
     <string name="settings_donate_button">Ko-fi ile destekle</string>
+    <string name="ko_fi_heading">Fueled by coffee and a passion for creating! ☕</string>
+    <string name="ko_fi_body">A lot of time and effort goes into making TeamCreatorr better. If you enjoy using the app, why not fuel the next update with a coffee? No pressure, just appreciation!</string>
+    <string name="ko_fi_link">Buy me a coffee on Ko-fi</string>
     <string name="settings_about">Hakkında</string>
-    <string name="settings_about_text">TeamCreatorr v1.3.1\nTakımlar ve Sıralama.\nTüm veriler bu cihazda yerel olarak saklanır.</string>
+    <string name="settings_about_text">TeamCreatorr v1.4.0\nTakımlar ve Sıralama.\nTüm veriler bu cihazda yerel olarak saklanır.</string>
     <string name="settings_reset">Sıfırla</string>
     <string name="settings_reset_desc">Uygulamadaki verileri sil.</string>
     <string name="settings_reset_all">Her şeyi sıfırla</string>

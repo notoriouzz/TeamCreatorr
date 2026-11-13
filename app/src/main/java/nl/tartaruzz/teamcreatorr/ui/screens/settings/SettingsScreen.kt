@@ -6,6 +6,7 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -87,7 +88,7 @@ fun SettingsScreen() {
         AppHeader(stringResource(R.string.settings_title))
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(vertical = 16.dp),
+            contentPadding = PaddingValues(top = 16.dp, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
@@ -151,13 +152,16 @@ fun SettingsScreen() {
             item {
                 SectionTitle(stringResource(R.string.settings_donate_title))
                 Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
-                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text(stringResource(R.string.settings_donate_text), style = MaterialTheme.typography.bodyMedium)
-                        Button(onClick = { openKofi(context) }, modifier = Modifier.fillMaxWidth()) {
-                            Text("☕")
-                            Spacer(Modifier.size(6.dp))
-                            Text(stringResource(R.string.settings_donate_button), fontWeight = FontWeight.Bold)
-                        }
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(stringResource(R.string.ko_fi_heading), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.ko_fi_body), style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            stringResource(R.string.ko_fi_link),
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.clickable { openKofi(context) }
+                        )
                     }
                 }
             }

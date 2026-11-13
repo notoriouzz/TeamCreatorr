@@ -3,6 +3,7 @@ package nl.tartaruzz.teamcreatorr.ui.screens.match
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -61,7 +62,10 @@ fun MatchListScreen(onNewMatch: () -> Unit, onOpenMatch: (Long) -> Unit) {
                 modifier = Modifier.padding(16.dp)
             )
         } else {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            LazyColumn(
+                contentPadding = PaddingValues(bottom = 96.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 items(matches, key = { it.id }) { match ->
                     MatchListRow(match, onClick = { onOpenMatch(match.id) })
                 }

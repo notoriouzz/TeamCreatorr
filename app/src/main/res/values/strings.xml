@@ -180,8 +180,11 @@
     <string name="settings_donate_title">Steun de ontwikkelaar</string>
     <string name="settings_donate_text">Bevalt de app? Trakteer de ontwikkelaar op een koffie! ☕ Dan blijf ik met plezier nieuwe functies bouwen.</string>
     <string name="settings_donate_button">Steun via Ko-fi</string>
+    <string name="ko_fi_heading">Fueled by coffee and a passion for creating! ☕</string>
+    <string name="ko_fi_body">A lot of time and effort goes into making TeamCreatorr better. If you enjoy using the app, why not fuel the next update with a coffee? No pressure, just appreciation!</string>
+    <string name="ko_fi_link">Buy me a coffee on Ko-fi</string>
     <string name="settings_about">Over</string>
-    <string name="settings_about_text">TeamCreatorr v1.3.1\nTeams &amp; Ranking.\nAlle gegevens worden lokaal op dit apparaat opgeslagen.</string>
+    <string name="settings_about_text">TeamCreatorr v1.4.0\nTeams &amp; Ranking.\nAlle gegevens worden lokaal op dit apparaat opgeslagen.</string>
     <string name="settings_reset">Reset</string>
     <string name="settings_reset_desc">Verwijder gegevens uit de app.</string>
     <string name="settings_reset_all">Alles resetten</string>
