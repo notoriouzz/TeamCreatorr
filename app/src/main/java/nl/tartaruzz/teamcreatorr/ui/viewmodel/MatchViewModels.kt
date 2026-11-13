@@ -120,7 +120,8 @@ class NewMatchViewModel(private val repo: Repository) : ViewModel() {
                 teamA = current.teamA,
                 teamB = current.teamB
             )
-            _state.value = _state.value.copy(confirming = false, confirmedMatchId = id)
+            // Reset the form so the same match cannot be confirmed twice.
+            _state.value = NewMatchUiState(confirmedMatchId = id)
         }
     }
 
