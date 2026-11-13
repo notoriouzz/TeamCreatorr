@@ -10,20 +10,17 @@ zonder internetverbinding.
 
 ---
 
-## Nieuwe functies (v1.1.0)
+## Nieuwe functies (v1.2.0)
 
-- **Nicknames**: optioneel per speler, zichtbaar in de ranking en in het
-  WhatsApp-deelbericht.
-- **Trofeeën** voor de top 3 van de ranking (goud, zilver, brons).
-- **Teamindeling delen** via de Android-deelsheet (WhatsApp en meer).
-- **Iedereen selecteren / alles wissen** bij het maken van een wedstrijd.
-- **Wedstrijdstatussen**: Teamindeling bevestigd → Gespeeld → Afgerond.
-  Nog niet gespeelde wedstrijden leveren (nog) geen punten op.
-- **Gelijkspelpunten** apart instelbaar (standaard 1 punt).
-- **Handmatige puntenmutaties** per speler, met volledige puntenopbouw.
-- **Spelersrating (1-99)** en optionele **ranking-gebaseerde teamindeling**.
-- **Profielfoto's** via de Android Photo Picker (automatisch geoptimaliseerd).
-- **Centraal duobeheer** in Instellingen, met tijdelijke duo's per wedstrijd.
+- **Meertaligheid**: Nederlands (standaard), Engels en Turks, met taalkeuze in Instellingen.
+- **Zwevende pill-navigatie** met zes pictogrammen: Home, Spelers, Wedstrijd, Ranking, Historie, Instellingen.
+- **Volledig wedstrijdoverzicht** op het tabblad Wedstrijd (gespeeld én nog te spelen).
+- **Back-up exporteren en importeren** (JSON) via de Android-bestandskiezer.
+- **Resetopties**: alles, alleen wedstrijdgeschiedenis, alleen spelers of alleen ranking.
+- **Numerieke scrollers** (zonder toetsenbord) voor uitslagen en puntentelling.
+- **Ko-fi-donatie** in Instellingen (https://ko-fi.com/tartaruzz).
+- **Profielfoto** vergroten bij aantikken; foto wijzigen via het bewerkingsscherm.
+- **Uniforme groene kopbalk** en correcte weergave ten opzichte van Android system bars.
 
 > **Ratingberekening:** rating = `1 + 98 × (gemiddelde wedstrijdpunten / max_punten_per_wedstrijd)`,
 > afgerond en begrensd op 1–99. `max_punten_per_wedstrijd = aanwezigheid + max(winst, gelijkspel)`.
@@ -129,4 +126,4 @@ Zie [docs/GEBRUIKERSHANDLEIDING.md](docs/GEBRUIKERSHANDLEIDING.md).
 
 ## Versie
 
-Huidige versie: **1.0.0** (zie [CHANGELOG.md](CHANGELOG.md)).
+Huidige versie: **1.2.0** (zie [CHANGELOG.md](CHANGELOG.md)).

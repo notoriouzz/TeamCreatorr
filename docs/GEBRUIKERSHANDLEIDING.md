@@ -2,113 +2,72 @@
 
 ## Overzicht
 
-De app heeft onderin vijf tabbladen:
+De app heeft onderin een zwevende navigatiebalk met zes pictogrammen:
 
-1. **Home** — dashboard met top 3, aantallen en de laatste uitslag.
-2. **Wedstrijd** — maak een nieuwe wedstrijd en verdeel de teams.
-3. **Ranking** — het volledige klassement.
-4. **Historie** — alle gespeelde wedstrijden.
-5. **Instellingen** — puntentelling, duo's en export.
+1. **Home** — dashboard met eerstvolgende wedstrijd, top 3 en laatste uitslag.
+2. **Spelers** — spelerslijst (toevoegen, bewerken, verwijderen).
+3. **Wedstrijd** — overzicht van alle wedstrijden + nieuwe wedstrijd maken.
+4. **Ranking** — het volledige klassement.
+5. **Historie** — alle wedstrijden.
+6. **Instellingen** — taal, puntentelling, back-up, reset en donatie.
 
 ## Spelers toevoegen
 
-1. Ga naar **Home** → **Spelers**.
-2. Tik op de **+**-knop om één speler toe te voegen.
-3. Tik op het icoon rechtsboven (lijst) om **meerdere spelers tegelijk** toe te
-   voegen (één naam per regel).
-
-- Tik op een speler om zijn/haar profiel te openen.
-- Gebruik het potlood om een naam aan te passen, de prullenbak om te verwijderen
-  en de schakelaar om een speler tijdelijk uit te schakelen.
+1. Ga naar het tabblad **Spelers**.
+2. Tik op de **+**-knop voor één speler, of op het lijsticoon rechtsboven voor meerdere spelers.
+3. Vul **Naam** en optioneel **Nickname** in. Het toetsenbord opent automatisch en de eerste letter wordt een hoofdletter.
+4. Tik op een speler om het profiel te openen; gebruik het potlood om te bewerken, de prullenbak om te verwijderen en de schakelaar om een speler uit te schakelen.
 
 ## Een wedstrijd maken
 
-1. Ga naar het tabblad **Wedstrijd**.
-2. Kies de **teamgrootte** (bijvoorbeeld 5 tegen 5).
-3. Kies een **datum** en eventueel een **notitie**.
-4. (Optioneel) stel **duo's** in die bij elkaar moeten blijven.
-5. Vink precies het juiste aantal **spelers** aan.
-6. Tik op **Teams genereren**.
-7. Ben je niet tevreden? Tik op **Opnieuw indelen**.
-8. Tik op **Bevestigen** om de wedstrijd op te slaan.
-
-Na het bevestigen kom je automatisch op het wedstrijdscherm waar je de uitslag
-kunt invullen.
+1. Ga naar **Wedstrijd** en tik op **Nieuwe wedstrijd**.
+2. Kies de **teamgrootte** en een **datum**.
+3. Stel eventueel **duo's** in.
+4. Vink precies het juiste aantal **spelers** aan.
+5. Tik op **Teams genereren**. Het scherm scrollt automatisch naar de indeling.
+6. Niet tevreden? Tik op **Opnieuw**.
+7. Tik op **Bevestigen** en daarna op **Check** om terug te keren.
 
 ## Uitslag invoeren
 
-- Vul **Score Team A** en **Score Team B** in en tik op **Uitslag opslaan**.
-- De app bepaalt automatisch de winnaar (of gelijkspel) en verwerkt de punten.
-- Een uitslag kun je later altijd nog aanpassen.
+1. Open een wedstrijd via **Wedstrijd** of **Historie**.
+2. Tik op **Uitslag toevoegen**.
+3. Kies beide scores met de verticale scrollers (0–30, standaard 0-0) en tik op **Uitslag opslaan**.
 
 ## Ranking en punten
 
-- Standaard: **1 punt** voor aanwezigheid en **2 extra punten** voor een overwinning.
-- Bij een gelijkspel ontvangt iedereen alleen het aanwezigheidspunt.
-- In **Instellingen** kun je beide puntenwaarden wijzigen. De hele ranking wordt
-  dan automatisch opnieuw berekend, ook voor eerdere wedstrijden.
+- Standaard: **1 punt** aanwezigheid, **2 punten** winst, **1 punt** gelijkspel.
+- In **Instellingen** wijzig je deze waarden met scrollers en tik je op **Puntentelling bijwerken**.
+- De ranking wordt automatisch opnieuw berekend (ook voor eerdere wedstrijden).
+- Het podium toont goud/zilver/brons; daaronder staan de overige spelers.
 
-## Duo's (spelers bij elkaar houden)
+## Duo's
 
-- Ga naar **Instellingen** → **Duo's** (of gebruik de sectie in het
-  wedstrijdscherm).
-- Tik op **Duo toevoegen** en kies twee spelers.
-- Tik op het verbroken-link-icoon om een duo weer los te koppelen.
+- Beheer duo's uitsluitend in het wedstrijdscherm (sectie **Duo's**).
+- Elk opgeslagen duo heeft een aan/uit-schakelaar. Uitgeschakelde duo's doen niet mee aan de teamindeling.
 
 ## Profielen en geschiedenis
 
-- Tik in de ranking of spelerslijst op een speler om het profiel te zien.
-- Het profiel toont statistieken, winpercentage en de persoonlijke
-  wedstrijdgeschiedenis (eigen team is gekleurd en vet gemarkeerd).
+- Tik op een speler om het profiel te openen: gespeeld, winst, gelijk, verlies, totaalpunten en winpercentage.
 - Gebruik de filters **Alle / Gewonnen / Verloren / Gelijk**.
-- Tik op een wedstrijd om alle details te bekijken.
+- Tik op de profielfoto om hem groot te bekijken; tik erbuiten om te sluiten.
+- Foto wijzigen: **potlood** → **Foto kiezen**.
 
-## Nicknames
+## Taal
 
-- Bij het toevoegen/bewerken van een speler kun je een optionele nickname invullen.
-- De nickname verschijnt in de **Ranking** en in het **WhatsApp-deelbericht**.
+- **Instellingen → Taal** → kies **Nederlands**, **English** of **Türkçe**. De keuze wordt onthouden.
 
-## Wedstrijdstatus
+## Back-up en reset
 
-1. **Teamindeling bevestigd** — teams staan vast, de wedstrijd moet nog gespeeld
-   worden (geen punten).
-2. **Gespeeld** — open de wedstrijd en tik op **Markeer als gespeeld** om de
-   uitslag in te voeren.
-3. **Afgerond** — de uitslag is opgeslagen en de punten zijn verwerkt.
+- **Instellingen → Exporteren (back-up)** slaat een JSON-back-up op.
+- **Instellingen → Importeren (back-up)** leest een back-up in (vervangen of samenvoegen).
+- **Instellingen → Reset**: alles, alleen wedstrijdgeschiedenis, alleen spelers of alleen ranking.
 
-Op het dashboard en in de historie zie je duidelijk welke wedstrijden nog
-gespeeld moeten worden.
+## Doneren
+
+- **Instellingen → Steun de ontwikkelaar** opent de Ko-fi-pagina in de browser.
 
 ## Teamindeling delen
 
-Open een (bevestigde) wedstrijd en tik op **Deel teamindeling**. De tekst wordt
-opgebouwd uit de daadwerkelijke teams en kan via WhatsApp of een andere app
-worden gedeeld.
+- Open een wedstrijd en tik op **Deel teamindeling**.
 
-## Ranking-gebaseerde teamindeling
-
-Zet bij **Nieuwe wedstrijd** de optie **Houd rekening met ranking** aan om de
-teams zo evenwichtig mogelijk te verdelen op basis van spelersratings.
-
-## Handmatige punten
-
-Open een spelerprofiel → **Puntenopbouw** → **Punten toevoegen / aftrekken**.
-Geef een aantal punten (bijv. 5 of -3) en een verplichte omschrijving.
-Handmatige mutaties blijven behouden bij herberekeningen.
-
-## Profielfoto
-
-Open een spelerprofiel → **Foto wijzigen** om een foto uit de galerij te kiezen.
-Gebruik **Verwijderen** om de foto te verwijderen. Foto's worden automatisch
-verkleind en gecomprimeerd.
-
-## Duo's per wedstrijd
-
-Vaste duo's beheer je centraal in **Instellingen → Duo's**. Bij een nieuwe
-wedstrijd kun je met de schakelaar kiezen of de vaste duo's gebruikt worden en
-kun je tijdelijke duo's voor die ene wedstrijd toevoegen.
-
-## Exporteren
-
-- Ga naar **Instellingen** → **Exporteren (CSV)** om de ranking en wedstrijden
-  als CSV-bestand te delen.

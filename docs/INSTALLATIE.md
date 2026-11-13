@@ -4,7 +4,7 @@
 
 1. Ga op je computer of telefoon naar de
    [GitHub Releases](../../releases)-pagina van dit project.
-2. Download de nieuwste **APK** (bijvoorbeeld `TeamCreatorr-1.0.0.apk`).
+2. Download de nieuwste **APK** (bijvoorbeeld `TeamCreatorr-1.2.0.apk`).
 3. Zet de APK op je Android-telefoon (bijvoorbeeld via USB, e-mail of cloud).
 4. Open de APK op je telefoon.
 5. Android vraagt mogelijk om installatie van onbekende bronnen toe te staan.

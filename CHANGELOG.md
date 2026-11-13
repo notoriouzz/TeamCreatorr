@@ -4,6 +4,30 @@ Alle noemenswaardige wijzigingen aan TeamCreatorr worden hier bijgehouden.
 
 Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1.0/).
 
+## [1.2.0] - 2026-11-13
+
+### Toegevoegd
+- Meertaligheid: Nederlands (standaard), Engels en Turks, met taalkeuze in Instellingen.
+- Zwevende pill-navigatie met zes pictogrammen: Home, Spelers, Wedstrijd, Ranking, Historie, Instellingen.
+- Volledig wedstrijdoverzicht op het tabblad Wedstrijd (gespeeld én nog te spelen).
+- Back-up exporteren en importeren (JSON, versie 1) via de Android-bestandskiezer.
+- Resetopties: alles, alleen wedstrijdgeschiedenis, alleen spelers of alleen ranking.
+- Numerieke scrollers (zonder toetsenbord) voor uitslagen (0–30) en puntentelling (0–10).
+- Ko-fi-donatieknop in Instellingen (https://ko-fi.com/tartaruzz).
+- Profielfoto vergroten bij aantikken; foto wijzigen via het bewerkingsscherm (potlood).
+- Uniforme groene kopbalk op alle pagina's.
+
+### Gewijzigd
+- Notities bij wedstrijden volledig verwijderd (inclusief databasekolom, migratie 2→3).
+- "Opnieuw indelen" → "Opnieuw"; "Markeer als gespeeld" → "Uitslag toevoegen".
+- "Puntentelling opslaan" → "Puntentelling bijwerken".
+- "Deelnames" → "Gespeeld" in het spelersprofiel.
+- Duo's worden uitsluitend in het wedstrijdscherm beheerd, met een schakelaar per duo.
+- Correcte positionering ten opzichte van Android system bars (edge-to-edge + insets).
+
+### Opgelost
+- Navigatiebalk versprong in hoogte bij het wisselen van tabblad (nu uitsluitend pictogrammen).
+
 ## [1.1.0] - 2026-11-13
 
 ### Toegevoegd
