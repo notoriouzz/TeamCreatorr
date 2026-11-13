@@ -41,6 +41,13 @@ class PlayerListViewModel(private val repo: Repository) : ViewModel() {
     fun delete(id: Long, onResult: (Boolean) -> Unit = {}) {
         viewModelScope.launch { onResult(repo.deletePlayer(id)) }
     }
+
+    fun deleteMany(ids: List<Long>, onResult: () -> Unit = {}) {
+        viewModelScope.launch {
+            ids.forEach { repo.deletePlayer(it) }
+            onResult()
+        }
+    }
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)

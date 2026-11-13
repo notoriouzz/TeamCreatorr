@@ -1,7 +1,8 @@
 package nl.tartaruzz.teamcreatorr.ui.screens.players
 
 import android.widget.Toast
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -31,11 +33,9 @@ import nl.tartaruzz.teamcreatorr.ui.components.PlayerAvatar
 import nl.tartaruzz.teamcreatorr.ui.viewmodel.PlayerListViewModel
 import nl.tartaruzz.teamcreatorr.ui.viewmodel.appViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun PlayerListScreen(
-    onOpenPlayer: (Long) -> Unit
-) {
+fun PlayerListScreen(onOpenPlayer: (Long) -> Unit) {
     val vm: PlayerListViewModel = appViewModel()
     val players by vm.players.collectAsState()
     val context = LocalContext.current
@@ -43,27 +43,40 @@ fun PlayerListScreen(
     var showAdd by remember { mutableStateOf(false) }
     var showBulk by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<PlayerEntity?>(null) }
-    var deleting by remember { mutableStateOf<PlayerEntity?>(null) }
+    var selectedIds by remember { mutableStateOf<Set<Long>>(emptySet()) }
+    var showDeleteSelection by remember { mutableStateOf(false) }
+
+    val selectionMode = selectedIds.isNotEmpty()
+
+    fun toggle(id: Long) {
+        selectedIds = if (id in selectedIds) selectedIds - id else selectedIds + id
+    }
 
     Scaffold(
         topBar = {
             Box {
-                AppHeader(stringResource(R.string.players_title))
-                IconButton(onClick = { showBulk = true }, modifier = Modifier.align(Alignment.CenterEnd).padding(end = 8.dp)) {
-                    Icon(Icons.AutoMirrored.Filled.PlaylistAdd, contentDescription = stringResource(R.string.players_bulk_title), tint = androidx.compose.ui.graphics.Color.White)
+                AppHeader(stringResource(R.string.players_title), modifier = Modifier.padding(horizontal = 16.dp))
+                if (selectionMode) {
+                    IconButton(onClick = { showDeleteSelection = true }, modifier = Modifier.align(Alignment.CenterEnd).padding(end = 24.dp)) {
+                        Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete), tint = Color.White)
+                    }
+                } else {
+                    IconButton(onClick = { showBulk = true }, modifier = Modifier.align(Alignment.CenterEnd).padding(end = 24.dp)) {
+                        Icon(Icons.AutoMirrored.Filled.PlaylistAdd, contentDescription = stringResource(R.string.players_bulk_title), tint = Color.White)
+                    }
                 }
             }
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAdd = true }) {
-                Icon(Icons.Filled.Add, contentDescription = "Speler toevoegen")
+                Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.players_add_title))
             }
         }
     ) { padding ->
         if (players.isEmpty()) {
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 Text(
-                    "Nog geen spelers. Tik op + om spelers toe te voegen.",
+                    stringResource(R.string.players_empty),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(24.dp)
                 )
@@ -77,10 +90,10 @@ fun PlayerListScreen(
                 items(players, key = { it.id }) { player ->
                     PlayerRow(
                         player = player,
-                        onClick = { onOpenPlayer(player.id) },
-                        onEdit = { editing = player },
-                        onDelete = { deleting = player },
-                        onToggleActive = { vm.setActive(player.id, it) }
+                        selected = player.id in selectedIds,
+                        selectionMode = selectionMode,
+                        onClick = { if (selectionMode) toggle(player.id) else onOpenPlayer(player.id) },
+                        onLongClick = { toggle(player.id) }
                     )
                 }
             }
@@ -89,7 +102,7 @@ fun PlayerListScreen(
 
     if (showAdd) {
         PlayerDialog(
-            title = "Speler toevoegen",
+            title = stringResource(R.string.players_add_title),
             initialName = "",
             initialNickname = "",
             onDismiss = { showAdd = false },
@@ -106,14 +119,14 @@ fun PlayerListScreen(
             onConfirm = { names ->
                 vm.addMany(names)
                 showBulk = false
-                Toast.makeText(context, "Spelers toegevoegd", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.players_added), Toast.LENGTH_SHORT).show()
             }
         )
     }
 
     editing?.let { player ->
         PlayerDialog(
-            title = "Speler aanpassen",
+            title = stringResource(R.string.players_edit_title),
             initialName = player.name,
             initialNickname = player.nickname ?: "",
             onDismiss = { editing = null },
@@ -124,52 +137,51 @@ fun PlayerListScreen(
         )
     }
 
-    deleting?.let { player ->
+    if (showDeleteSelection) {
         AlertDialog(
-            onDismissRequest = { deleting = null },
-            title = { Text("Speler verwijderen") },
-            text = {
-                Text(
-                    "Weet je zeker dat je '${player.name}' wilt verwijderen? " +
-                        "Als deze speler al wedstrijden heeft gespeeld, wordt hij uitgeschakeld " +
-                        "zodat de historie behouden blijft."
-                )
-            },
+            onDismissRequest = { showDeleteSelection = false },
+            title = { Text(stringResource(R.string.players_delete_title)) },
+            text = { Text(stringResource(R.string.players_delete_many, selectedIds.size), style = MaterialTheme.typography.bodyMedium) },
             confirmButton = {
                 TextButton(onClick = {
-                    vm.delete(player.id) { deleted ->
-                        val msg = if (deleted) "Speler verwijderd" else "Speler uitgeschakeld (historie behouden)"
-                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                    vm.deleteMany(selectedIds.toList()) {
+                        Toast.makeText(context, context.getString(R.string.players_deleted), Toast.LENGTH_SHORT).show()
                     }
-                    deleting = null
-                }) { Text("Verwijderen") }
+                    selectedIds = emptySet()
+                    showDeleteSelection = false
+                }) { Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error) }
             },
-            dismissButton = {
-                TextButton(onClick = { deleting = null }) { Text("Annuleren") }
-            }
+            dismissButton = { TextButton(onClick = { showDeleteSelection = false }) { Text(stringResource(R.string.cancel)) } }
         )
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PlayerRow(
     player: PlayerEntity,
+    selected: Boolean,
+    selectionMode: Boolean,
     onClick: () -> Unit,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit,
-    onToggleActive: (Boolean) -> Unit
+    onLongClick: () -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+        )
     ) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onClick)
-                .padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+                .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+                .padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            if (selectionMode) {
+                Checkbox(checked = selected, onCheckedChange = { onClick() })
+                Spacer(Modifier.width(4.dp))
+            }
             PlayerAvatar(player.name, player.photoFileName, size = 40.dp)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
@@ -188,19 +200,12 @@ private fun PlayerRow(
                 }
                 if (!player.active) {
                     Text(
-                        "Inactief",
+                        stringResource(R.string.players_inactive),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.error
                     )
                 }
             }
-            IconButton(onClick = onEdit) {
-                Icon(Icons.Filled.Edit, contentDescription = "Bewerken")
-            }
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Filled.Delete, contentDescription = "Verwijderen", tint = MaterialTheme.colorScheme.error)
-            }
-            Switch(checked = player.active, onCheckedChange = onToggleActive)
         }
     }
 }
@@ -232,7 +237,7 @@ private fun PlayerDialog(
                     value = name,
                     onValueChange = { name = it },
                     singleLine = true,
-                    label = { Text("Naam") },
+                    label = { Text(stringResource(R.string.players_name)) },
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Words,
                         keyboardType = KeyboardType.Text,
@@ -244,7 +249,7 @@ private fun PlayerDialog(
                     value = nickname,
                     onValueChange = { nickname = it },
                     singleLine = true,
-                    label = { Text("Nickname (optioneel)") },
+                    label = { Text(stringResource(R.string.players_nickname)) },
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Words,
                         keyboardType = KeyboardType.Text,
@@ -256,11 +261,11 @@ private fun PlayerDialog(
         },
         confirmButton = {
             TextButton(enabled = name.isNotBlank(), onClick = { onConfirm(name.trim(), nickname.trim().ifEmpty { null }) }) {
-                Text("Opslaan")
+                Text(stringResource(R.string.save))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Annuleren") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
         }
     )
 }
@@ -273,27 +278,28 @@ private fun BulkAddDialog(
     var text by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Meerdere spelers toevoegen") },
+        title = { Text(stringResource(R.string.players_bulk_title)) },
         text = {
             Column {
-                Text("Voer per regel één naam in.", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.players_bulk_hint), style = MaterialTheme.typography.bodySmall)
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = it },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 4,
-                    label = { Text("Namen") }
+                    label = { Text(stringResource(R.string.players_names_label)) }
                 )
             }
         },
         confirmButton = {
             TextButton(enabled = text.isNotBlank(), onClick = { onConfirm(text.lines()) }) {
-                Text("Toevoegen")
+                Text(stringResource(R.string.add))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Annuleren") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
         }
     )
 }
+

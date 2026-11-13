@@ -103,6 +103,7 @@
     <string name="players_delete_title">Delete player</string>
     <string name="players_delete_msg">Are you sure you want to delete \'%1$s\'? If this player has already played matches, they will be deactivated so history is preserved.</string>
     <string name="players_deleted">Player deleted</string>
+    <string name="players_delete_many">Are you sure you want to delete %1$d players? Players with match history will be deactivated.</string>
     <string name="players_deactivated">Player deactivated (history preserved)</string>
     <string name="players_added">Players added</string>
     <string name="players_bulk_title">Add multiple players</string>
@@ -158,7 +159,7 @@
     <string name="settings_donate_text">Enjoying the app? Buy the developer a coffee! ☕ That keeps me happily building new features.</string>
     <string name="settings_donate_button">Support via Ko-fi</string>
     <string name="settings_about">About</string>
-    <string name="settings_about_text">TeamCreatorr v1.2.0\nTeams &amp; Ranking.\nAll data is stored locally on this device.</string>
+    <string name="settings_about_text">TeamCreatorr v1.3.0\nTeams &amp; Ranking.\nAll data is stored locally on this device.</string>
     <string name="settings_reset">Reset</string>
     <string name="settings_reset_desc">Delete data from the app.</string>
     <string name="settings_reset_all">Reset everything</string>
@@ -200,6 +201,14 @@
     <string name="ranking_empty_sub">Play matches to earn points.</string>
     <string name="ranking_rest">Other players</string>
     <string name="ranking_position">Position %1$d</string>
+    <string name="ranking_col_pos">Pos</string>
+    <string name="ranking_col_p">P</string>
+    <string name="ranking_col_w">W</string>
+    <string name="ranking_col_d">D</string>
+    <string name="ranking_col_l">L</string>
+    <string name="ranking_col_winpct">Win%</string>
+    <string name="ranking_col_pts">Pts</string>
+    <string name="ranking_col_form">Form</string>
 </resources>
 
 

@@ -123,6 +123,7 @@
     <string name="players_delete_title">Speler verwijderen</string>
     <string name="players_delete_msg">Weet je zeker dat je \'%1$s\' wilt verwijderen? Als deze speler al wedstrijden heeft gespeeld, wordt hij uitgeschakeld zodat de historie behouden blijft.</string>
     <string name="players_deleted">Speler verwijderd</string>
+    <string name="players_delete_many">Weet je zeker dat je %1$d spelers wilt verwijderen? Spelers met wedstrijdhistorie worden uitgeschakeld.</string>
     <string name="players_deactivated">Speler uitgeschakeld (historie behouden)</string>
     <string name="players_added">Spelers toegevoegd</string>
     <string name="players_bulk_title">Meerdere spelers toevoegen</string>
@@ -180,7 +181,7 @@
     <string name="settings_donate_text">Bevalt de app? Trakteer de ontwikkelaar op een koffie! ☕ Dan blijf ik met plezier nieuwe functies bouwen.</string>
     <string name="settings_donate_button">Steun via Ko-fi</string>
     <string name="settings_about">Over</string>
-    <string name="settings_about_text">TeamCreatorr v1.2.0\nTeams &amp; Ranking.\nAlle gegevens worden lokaal op dit apparaat opgeslagen.</string>
+    <string name="settings_about_text">TeamCreatorr v1.3.0\nTeams &amp; Ranking.\nAlle gegevens worden lokaal op dit apparaat opgeslagen.</string>
     <string name="settings_reset">Reset</string>
     <string name="settings_reset_desc">Verwijder gegevens uit de app.</string>
     <string name="settings_reset_all">Alles resetten</string>
@@ -230,6 +231,14 @@
     <string name="ranking_empty_sub">Speel wedstrijden om punten te verdienen.</string>
     <string name="ranking_rest">Overige spelers</string>
     <string name="ranking_position">Positie %1$d</string>
+    <string name="ranking_col_pos">Pos</string>
+    <string name="ranking_col_p">P</string>
+    <string name="ranking_col_w">W</string>
+    <string name="ranking_col_d">D</string>
+    <string name="ranking_col_l">L</string>
+    <string name="ranking_col_winpct">Win%</string>
+    <string name="ranking_col_pts">Pts</string>
+    <string name="ranking_col_form">Vorm</string>
 </resources>
 
 

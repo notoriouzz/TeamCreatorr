@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import nl.tartaruzz.teamcreatorr.R
 import nl.tartaruzz.teamcreatorr.domain.MatchDetail
+import nl.tartaruzz.teamcreatorr.domain.MatchStatus
 import nl.tartaruzz.teamcreatorr.ui.components.AppHeader
 import nl.tartaruzz.teamcreatorr.ui.components.statusColor
 import nl.tartaruzz.teamcreatorr.ui.components.statusLabel
@@ -87,11 +88,19 @@ private fun MatchListRow(match: MatchDetail, onClick: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(Modifier.height(4.dp))
-                Text(
-                    stringResource(R.string.match_vs, match.teamSize, match.teamSize),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                if (match.status == MatchStatus.FINISHED) {
+                    Text(
+                        stringResource(R.string.score_format, match.scoreA ?: 0, match.scoreB ?: 0),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                } else {
+                    Text(
+                        stringResource(R.string.match_vs, match.teamSize, match.teamSize),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
             Text(
                 statusLabel(match.status),

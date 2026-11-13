@@ -2,21 +2,21 @@
 
 ## Overzicht
 
-De app heeft onderin een zwevende navigatiebalk met zes pictogrammen:
+De app heeft onderin een zwevende navigatiebalk met vijf pictogrammen:
 
 1. **Home** — dashboard met eerstvolgende wedstrijd, top 3 en laatste uitslag.
-2. **Spelers** — spelerslijst (toevoegen, bewerken, verwijderen).
-3. **Wedstrijd** — overzicht van alle wedstrijden + nieuwe wedstrijd maken.
-4. **Ranking** — het volledige klassement.
-5. **Historie** — alle wedstrijden.
-6. **Instellingen** — taal, puntentelling, back-up, reset en donatie.
+2. **Spelers** — spelerslijst (toevoegen, selecteren en verwijderen).
+3. **Wedstrijd** — alle wedstrijden (gepland én afgerond) + nieuwe wedstrijd maken.
+4. **Ranking** — de standentabel (positie, P/W/D/L, Win%, Pts en Form).
+5. **Instellingen** — taal, puntentelling, back-up, reset en donatie.
 
 ## Spelers toevoegen
 
 1. Ga naar het tabblad **Spelers**.
 2. Tik op de **+**-knop voor één speler, of op het lijsticoon rechtsboven voor meerdere spelers.
 3. Vul **Naam** en optioneel **Nickname** in. Het toetsenbord opent automatisch en de eerste letter wordt een hoofdletter.
-4. Tik op een speler om het profiel te openen; gebruik het potlood om te bewerken, de prullenbak om te verwijderen en de schakelaar om een speler uit te schakelen.
+4. Tik op een speler om het profiel te openen; bewerken gebeurt vanuit het profiel (potlood).
+5. Houd een speler lang ingedrukt om hem/haar te selecteren. Selecteer meerdere spelers en verwijder ze samen via de prullenbak rechtsboven.
 
 ## Een wedstrijd maken
 
@@ -39,7 +39,7 @@ De app heeft onderin een zwevende navigatiebalk met zes pictogrammen:
 - Standaard: **1 punt** aanwezigheid, **2 punten** winst, **1 punt** gelijkspel.
 - In **Instellingen** wijzig je deze waarden met scrollers en tik je op **Puntentelling bijwerken**.
 - De ranking wordt automatisch opnieuw berekend (ook voor eerdere wedstrijden).
-- Het podium toont goud/zilver/brons; daaronder staan de overige spelers.
+- De **Ranking**-pagina toont een standentabel: positie, foto en naam, gespeeld (P), winst (W), gelijk (D), verlies (L), winpercentage (Win%), punten (Pts) en de **Form** van de laatste vijf wedstrijden (groen = winst, grijs = gelijk, rood = verlies).
 
 ## Duo's
 

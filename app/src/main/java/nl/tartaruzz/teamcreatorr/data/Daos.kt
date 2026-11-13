@@ -81,7 +81,8 @@ interface MatchPlayerDao {
     suspend fun insertAll(entries: List<MatchPlayerEntity>)
 
     @Query(
-        "SELECT mp.playerId AS playerId, mp.team AS team, m.scoreA AS scoreA, m.scoreB AS scoreB " +
+        "SELECT mp.playerId AS playerId, mp.team AS team, m.scoreA AS scoreA, m.scoreB AS scoreB, " +
+            "mp.matchId AS matchId, m.date AS date " +
             "FROM match_players mp JOIN matches m ON m.id = mp.matchId"
     )
     fun observeParticipations(): Flow<List<Participation>>

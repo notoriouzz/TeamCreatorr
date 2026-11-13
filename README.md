@@ -18,8 +18,12 @@ zonder internetverbinding.
 
 ---
 
-## Nieuwe functies (v1.2.0)
+## Nieuwe functies (v1.3.0)
 
+- **Premier League-achtige standentabel** in Ranking met P/W/D/L, Win%, Pts en Form.
+- **Selectiesysteem** in Spelers: lang indrukken om meerdere spelers te selecteren en samen te verwijderen.
+- **Historie samengevoegd met Wedstrijd** (geplande én afgeronde wedstrijden).
+- **Puntentelling** compacter en opgelost (drie scrollers naast elkaar, correcte selectie).
 - **Meertaligheid**: Nederlands (standaard), Engels en Turks, met taalkeuze in Instellingen.
 - **Zwevende pill-navigatie** met zes pictogrammen: Home, Spelers, Wedstrijd, Ranking, Historie, Instellingen.
 - **Volledig wedstrijdoverzicht** op het tabblad Wedstrijd (gespeeld én nog te spelen).
@@ -134,4 +138,4 @@ Zie [docs/GEBRUIKERSHANDLEIDING.md](docs/GEBRUIKERSHANDLEIDING.md).
 
 ## Versie
 
-Huidige versie: **1.2.0** (zie [CHANGELOG.md](CHANGELOG.md)).
+Huidige versie: **1.3.0** (zie [CHANGELOG.md](CHANGELOG.md)).

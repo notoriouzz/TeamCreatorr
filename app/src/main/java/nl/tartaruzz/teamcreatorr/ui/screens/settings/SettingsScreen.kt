@@ -122,8 +122,8 @@ fun SettingsScreen() {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             PickerWithLabel(stringResource(R.string.settings_attendance), att, { att = it }, Modifier.weight(1f))
                             PickerWithLabel(stringResource(R.string.settings_win), win, { win = it }, Modifier.weight(1f))
+                            PickerWithLabel(stringResource(R.string.settings_draw), draw, { draw = it }, Modifier.weight(1f))
                         }
-                        PickerWithLabel(stringResource(R.string.settings_draw), draw, { draw = it }, Modifier.fillMaxWidth())
                         Text(stringResource(R.string.settings_points_recalc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Button(onClick = { showConfirm = true }, modifier = Modifier.fillMaxWidth()) {
                             Text(stringResource(R.string.settings_points_update))

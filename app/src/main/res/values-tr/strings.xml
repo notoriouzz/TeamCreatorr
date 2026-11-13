@@ -103,6 +103,7 @@
     <string name="players_delete_title">Oyuncuyu sil</string>
     <string name="players_delete_msg">\'%1$s\' adlı oyuncuyu silmek istediğinize emin misiniz? Bu oyuncu maç oynadıysa geçmiş korunacak şekilde devre dışı bırakılır.</string>
     <string name="players_deleted">Oyuncu silindi</string>
+    <string name="players_delete_many">%1$d oyuncuyu silmek istediğinize emin misiniz? Maç geçmişi olan oyuncular devre dışı bırakılacak.</string>
     <string name="players_deactivated">Oyuncu devre dışı bırakıldı (geçmiş korundu)</string>
     <string name="players_added">Oyuncular eklendi</string>
     <string name="players_bulk_title">Birden çok oyuncu ekle</string>
@@ -158,7 +159,7 @@
     <string name="settings_donate_text">Uygulamayı beğendiniz mi? Geliştiriciye bir kahve ısmarlayın! ☕ Böylece yeni özellikler geliştirmeye keyifle devam ederim.</string>
     <string name="settings_donate_button">Ko-fi ile destekle</string>
     <string name="settings_about">Hakkında</string>
-    <string name="settings_about_text">TeamCreatorr v1.2.0\nTakımlar ve Sıralama.\nTüm veriler bu cihazda yerel olarak saklanır.</string>
+    <string name="settings_about_text">TeamCreatorr v1.3.0\nTakımlar ve Sıralama.\nTüm veriler bu cihazda yerel olarak saklanır.</string>
     <string name="settings_reset">Sıfırla</string>
     <string name="settings_reset_desc">Uygulamadaki verileri sil.</string>
     <string name="settings_reset_all">Her şeyi sıfırla</string>
@@ -200,6 +201,14 @@
     <string name="ranking_empty_sub">Puan kazanmak için maç oynayın.</string>
     <string name="ranking_rest">Diğer oyuncular</string>
     <string name="ranking_position">Sıra %1$d</string>
+    <string name="ranking_col_pos">Poz</string>
+    <string name="ranking_col_p">O</string>
+    <string name="ranking_col_w">G</string>
+    <string name="ranking_col_d">B</string>
+    <string name="ranking_col_l">M</string>
+    <string name="ranking_col_winpct">Kaz%</string>
+    <string name="ranking_col_pts">Puan</string>
+    <string name="ranking_col_form">Form</string>
 </resources>
 
 

@@ -4,6 +4,21 @@ Alle noemenswaardige wijzigingen aan TeamCreatorr worden hier bijgehouden.
 
 Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1.0/).
 
+## [1.3.0] - 2026-11-13
+
+### Toegevoegd
+- Premier League-achtige standentabel in Ranking (positie, P/W/D/L, Win%, Pts en Form van de laatste vijf wedstrijden).
+- Selectiesysteem in Spelers: lang indrukken om meerdere spelers te selecteren en in één handeling te verwijderen.
+
+### Gewijzigd
+- Tabblad Historie samengevoegd met Wedstrijd (geplande én afgeronde wedstrijden, inclusief uitslagen).
+- Navigatie: de hoofdmenu-iconen leiden altijd terug naar het bijbehorende hoofdoverzicht.
+- Consistente groene paginakoppen op Home, Spelers en alle onderliggende schermen.
+- Puntentelling compacter: de drie instellingen (aanwezigheid, winst, gelijkspel) staan naast elkaar.
+
+### Opgelost
+- Number picker: het grijze selectiegebied kwam niet overeen met de daadwerkelijk geselecteerde waarde.
+
 ## [1.2.0] - 2026-11-13
 
 ### Toegevoegd

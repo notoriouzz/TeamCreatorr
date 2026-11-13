@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material3.*
@@ -19,15 +18,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import nl.tartaruzz.teamcreatorr.R
+import nl.tartaruzz.teamcreatorr.domain.FormResult
 import nl.tartaruzz.teamcreatorr.domain.PlayerStats
 import nl.tartaruzz.teamcreatorr.ui.components.AppHeader
 import nl.tartaruzz.teamcreatorr.ui.components.PlayerAvatar
-import nl.tartaruzz.teamcreatorr.ui.theme.Bronze
-import nl.tartaruzz.teamcreatorr.ui.theme.Gold
-import nl.tartaruzz.teamcreatorr.ui.theme.Silver
 import nl.tartaruzz.teamcreatorr.ui.viewmodel.RankingViewModel
 import nl.tartaruzz.teamcreatorr.ui.viewmodel.appViewModel
 
@@ -38,7 +36,7 @@ fun RankingScreen(onOpenPlayer: (Long) -> Unit) {
 
     Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
         AppHeader(stringResource(R.string.ranking_title))
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(12.dp))
         if (ranking.isEmpty()) {
             Column(
                 Modifier.fillMaxWidth().padding(top = 48.dp),
@@ -59,25 +57,10 @@ fun RankingScreen(onOpenPlayer: (Long) -> Unit) {
                 )
             }
         } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                item { Podium(ranking.take(3), onOpenPlayer) }
-                val rest = ranking.drop(3)
-                if (rest.isNotEmpty()) {
-                    item {
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            stringResource(R.string.ranking_rest),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    items(rest, key = { it.playerId }) { stats ->
-                        RankingListRow(stats, onClick = { onOpenPlayer(stats.playerId) })
-                    }
+            LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(vertical = 8.dp)) {
+                item { TableHeader() }
+                items(ranking, key = { it.playerId }) { stats ->
+                    TableRow(stats, onClick = { onOpenPlayer(stats.playerId) })
                 }
             }
         }
@@ -85,142 +68,105 @@ fun RankingScreen(onOpenPlayer: (Long) -> Unit) {
 }
 
 @Composable
-private fun Podium(topThree: List<PlayerStats>, onOpenPlayer: (Long) -> Unit) {
-    if (topThree.isEmpty()) return
-    val display = listOfNotNull(
-        topThree.getOrNull(1),
-        topThree.getOrNull(0),
-        topThree.getOrNull(2)
-    )
+private fun TableHeader() {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.Bottom
+        Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        display.forEach { stats ->
-            val medal = when (stats.rank) {
-                1 -> Gold
-                2 -> Silver
-                else -> Bronze
-            }
-            val height = when (stats.rank) {
-                1 -> 120.dp
-                2 -> 96.dp
-                else -> 78.dp
-            }
-            PodiumColumn(stats, medal, height, Modifier.weight(1f), onOpenPlayer)
-        }
+        HeadCell(stringResource(R.string.ranking_col_pos), Modifier.width(24.dp))
+        Spacer(Modifier.weight(1f))
+        HeadCell(stringResource(R.string.ranking_col_p), Modifier.width(22.dp))
+        HeadCell(stringResource(R.string.ranking_col_w), Modifier.width(22.dp))
+        HeadCell(stringResource(R.string.ranking_col_d), Modifier.width(22.dp))
+        HeadCell(stringResource(R.string.ranking_col_l), Modifier.width(22.dp))
+        HeadCell(stringResource(R.string.ranking_col_winpct), Modifier.width(36.dp))
+        HeadCell(stringResource(R.string.ranking_col_pts), Modifier.width(32.dp))
+        HeadCell(stringResource(R.string.ranking_col_form), Modifier.width(46.dp))
     }
 }
 
 @Composable
-private fun PodiumColumn(
-    stats: PlayerStats,
-    medal: Color,
-    height: androidx.compose.ui.unit.Dp,
-    modifier: Modifier = Modifier,
-    onOpenPlayer: (Long) -> Unit
-) {
-    Column(
-        modifier = modifier.clickable { onOpenPlayer(stats.playerId) },
-        horizontalAlignment = Alignment.CenterHorizontally
+private fun TableRow(stats: PlayerStats, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 4.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            Modifier.size(34.dp).clip(CircleShape).background(medal),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                Icons.Filled.EmojiEvents,
-                contentDescription = stringResource(R.string.ranking_position, stats.rank),
-                modifier = Modifier.size(20.dp),
-                tint = Color(0xFF3A2A00)
-            )
-        }
-        Spacer(Modifier.height(6.dp))
-        PlayerAvatar(stats.name, stats.photoFileName, size = 56.dp)
-        Spacer(Modifier.height(6.dp))
         Text(
-            stats.name,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-        Text(
-            "${stats.totalPoints} ${stringResource(R.string.home_points_suffix)}",
+            "${stats.rank}",
+            Modifier.width(24.dp),
             style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Spacer(Modifier.height(6.dp))
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(height)
-                .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
-                .background(medal.copy(alpha = 0.9f)),
-            contentAlignment = Alignment.TopCenter
-        ) {
-            Text(
-                "${stats.rank}",
-                Modifier.padding(top = 8.dp),
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF3A2A00)
-            )
+        Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+            PlayerAvatar(stats.name, stats.photoFileName, size = 28.dp)
+            Spacer(Modifier.width(8.dp))
+            Column {
+                Text(
+                    stats.name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (!stats.active) {
+                    Text(
+                        stringResource(R.string.players_inactive),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
         }
+        StatCell("${stats.played}", 22.dp)
+        StatCell("${stats.wins}", 22.dp)
+        StatCell("${stats.draws}", 22.dp)
+        StatCell("${stats.losses}", 22.dp)
+        StatCell("${stats.winPercentage}", 36.dp)
+        StatCell("${stats.totalPoints}", 32.dp, bold = true, color = MaterialTheme.colorScheme.primary)
+        FormDots(stats.form, Modifier.width(46.dp))
     }
 }
 
 @Composable
-private fun RankingListRow(stats: PlayerStats, onClick: () -> Unit) {
-    Card(
-        onClick = onClick,
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                "${stats.rank}",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.width(24.dp)
-            )
-            PlayerAvatar(stats.name, stats.photoFileName, size = 40.dp)
-            Column(Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(
-                        stats.name,
-                        fontWeight = FontWeight.SemiBold,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = if (stats.active) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    if (!stats.active) {
-                        Text(
-                            stringResource(R.string.players_inactive),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
+private fun HeadCell(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text,
+        modifier,
+        style = MaterialTheme.typography.labelSmall,
+        textAlign = TextAlign.Center,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+}
+
+@Composable
+private fun StatCell(text: String, width: androidx.compose.ui.unit.Dp, bold: Boolean = false, color: Color = MaterialTheme.colorScheme.onSurface) {
+    Text(
+        text,
+        Modifier.width(width),
+        style = MaterialTheme.typography.bodySmall,
+        textAlign = TextAlign.Center,
+        fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
+        color = color
+    )
+}
+
+@Composable
+private fun FormDots(form: List<FormResult>, modifier: Modifier = Modifier) {
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
+        if (form.isEmpty()) {
+            Text("–", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        } else {
+            form.forEach { r ->
+                val color = when (r) {
+                    FormResult.WIN -> Color(0xFF43A047)
+                    FormResult.DRAW -> Color(0xFF9E9E9E)
+                    FormResult.LOSS -> Color(0xFFE53935)
                 }
-                if (!stats.nickname.isNullOrBlank()) {
-                    Text(
-                        "\"${stats.nickname}\"",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                Box(Modifier.size(8.dp).clip(CircleShape).background(color))
             }
-            Text(
-                "${stats.totalPoints}",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
         }
     }
 }
+

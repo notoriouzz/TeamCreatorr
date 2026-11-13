@@ -34,6 +34,17 @@ object RankingCalculator {
             val winPoints = wins * settings.winPoints
             val drawPoints = draws * settings.drawPoints
             val manual = manualPoints[player.id] ?: 0
+            val form = rows
+                .filter { it.scoreA != null && it.scoreB != null }
+                .sortedByDescending { it.date }
+                .take(5)
+                .map { row ->
+                    when (outcome(row.team, row.scoreA, row.scoreB)) {
+                        Outcome.WIN -> FormResult.WIN
+                        Outcome.LOSS -> FormResult.LOSS
+                        else -> FormResult.DRAW
+                    }
+                }
             PlayerStats(
                 playerId = player.id,
                 name = player.name,
@@ -49,7 +60,8 @@ object RankingCalculator {
                 drawPoints = drawPoints,
                 manualPoints = manual,
                 totalPoints = attendancePoints + winPoints + drawPoints + manual,
-                rank = 0
+                rank = 0,
+                form = form
             )
         }
 

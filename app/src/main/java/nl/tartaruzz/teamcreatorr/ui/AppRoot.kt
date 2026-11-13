@@ -19,7 +19,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SportsSoccer
@@ -45,7 +44,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import nl.tartaruzz.teamcreatorr.R
 import nl.tartaruzz.teamcreatorr.ui.navigation.Routes
-import nl.tartaruzz.teamcreatorr.ui.screens.history.HistoryScreen
 import nl.tartaruzz.teamcreatorr.ui.screens.home.HomeScreen
 import nl.tartaruzz.teamcreatorr.ui.screens.match.MatchDetailScreen
 import nl.tartaruzz.teamcreatorr.ui.screens.match.MatchListScreen
@@ -66,7 +64,6 @@ private val bottomNavItems = listOf(
     BottomNavItem(Routes.PLAYERS, R.string.nav_players, Icons.Filled.Groups),
     BottomNavItem(Routes.WEDSTRIJD, R.string.nav_match, Icons.Filled.SportsSoccer),
     BottomNavItem(Routes.RANKING, R.string.nav_ranking, Icons.Filled.EmojiEvents),
-    BottomNavItem(Routes.HISTORY, R.string.nav_history, Icons.Filled.History),
     BottomNavItem(Routes.SETTINGS, R.string.nav_settings, Icons.Filled.Settings)
 )
 
@@ -201,9 +198,6 @@ private fun AppNavHost(navController: NavHostController) {
         }
         composable(Routes.RANKING) {
             RankingScreen(onOpenPlayer = { id -> navController.navigate(Routes.player(id)) })
-        }
-        composable(Routes.HISTORY) {
-            HistoryScreen(onOpenMatch = { id -> navController.navigate(Routes.match(id)) })
         }
         composable(Routes.SETTINGS) {
             SettingsScreen()

@@ -38,8 +38,13 @@ data class Participation(
     val playerId: Long,
     val team: String,
     val scoreA: Int?,
-    val scoreB: Int?
+    val scoreB: Int?,
+    val matchId: Long = 0,
+    val date: Long = 0
 )
+
+/** Outcome of a single finished match for one player (used for form). */
+enum class FormResult { WIN, DRAW, LOSS }
 
 /** Computed statistics for one player, including ranking position. */
 data class PlayerStats(
@@ -57,7 +62,8 @@ data class PlayerStats(
     val manualPoints: Int,
     val totalPoints: Int,
     val rank: Int,
-    val photoFileName: String? = null
+    val photoFileName: String? = null,
+    val form: List<FormResult> = emptyList()
 ) {
     /** Automatically earned match points (attendance + win + draw). */
     val autoPoints: Int get() = attendancePoints + winPoints + drawPoints

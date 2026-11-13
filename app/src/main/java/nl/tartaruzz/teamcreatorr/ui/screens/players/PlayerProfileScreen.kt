@@ -90,10 +90,10 @@ fun PlayerProfileScreen(
     Scaffold(
         topBar = {
             Box {
-                AppHeader(profile?.name ?: stringResource(R.string.players_title), onBack = onBack)
+                AppHeader(profile?.name ?: stringResource(R.string.players_title), onBack = onBack, modifier = Modifier.padding(horizontal = 16.dp))
                 IconButton(
                     onClick = { showEdit = true },
-                    modifier = Modifier.align(Alignment.CenterEnd).padding(end = 8.dp)
+                    modifier = Modifier.align(Alignment.CenterEnd).padding(end = 24.dp)
                 ) {
                     Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.edit), tint = androidx.compose.ui.graphics.Color.White)
                 }
