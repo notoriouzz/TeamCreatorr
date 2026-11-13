@@ -25,6 +25,11 @@ zonder internetverbinding.
 - **Profielfoto's** via de Android Photo Picker (automatisch geoptimaliseerd).
 - **Centraal duobeheer** in Instellingen, met tijdelijke duo's per wedstrijd.
 
+> **Ratingberekening:** rating = `1 + 98 × (gemiddelde wedstrijdpunten / max_punten_per_wedstrijd)`,
+> afgerond en begrensd op 1–99. `max_punten_per_wedstrijd = aanwezigheid + max(winst, gelijkspel)`.
+> Spelers zonder gespeelde wedstrijden krijgen de neutrale rating 50. Handmatige
+> puntenmutaties tellen niet mee voor de rating.
+
 ## Wat kan de app?
 
 ### Spelersbeheer
