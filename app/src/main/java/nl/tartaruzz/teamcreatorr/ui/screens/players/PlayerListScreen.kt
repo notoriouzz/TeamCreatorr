@@ -6,24 +6,35 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import nl.tartaruzz.teamcreatorr.R
 import nl.tartaruzz.teamcreatorr.data.PlayerEntity
+import nl.tartaruzz.teamcreatorr.ui.components.AppHeader
+import nl.tartaruzz.teamcreatorr.ui.components.PlayerAvatar
 import nl.tartaruzz.teamcreatorr.ui.viewmodel.PlayerListViewModel
 import nl.tartaruzz.teamcreatorr.ui.viewmodel.appViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerListScreen(
-    onOpenPlayer: (Long) -> Unit,
-    onBack: () -> Unit
+    onOpenPlayer: (Long) -> Unit
 ) {
     val vm: PlayerListViewModel = appViewModel()
     val players by vm.players.collectAsState()
@@ -36,19 +47,12 @@ fun PlayerListScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Spelers") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Terug")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { showBulk = true }) {
-                        Icon(Icons.Filled.PlaylistAdd, contentDescription = "Meerdere spelers toevoegen")
-                    }
+            Box {
+                AppHeader(stringResource(R.string.players_title))
+                IconButton(onClick = { showBulk = true }, modifier = Modifier.align(Alignment.CenterEnd).padding(end = 8.dp)) {
+                    Icon(Icons.AutoMirrored.Filled.PlaylistAdd, contentDescription = stringResource(R.string.players_bulk_title), tint = androidx.compose.ui.graphics.Color.White)
                 }
-            )
+            }
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAdd = true }) {
@@ -166,11 +170,7 @@ private fun PlayerRow(
                 .padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                Icons.Filled.Person,
-                contentDescription = null,
-                tint = if (player.active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            PlayerAvatar(player.name, player.photoFileName, size = 40.dp)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(
@@ -179,6 +179,13 @@ private fun PlayerRow(
                     fontWeight = FontWeight.SemiBold,
                     color = if (player.active) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                if (!player.nickname.isNullOrBlank()) {
+                    Text(
+                        "\"${player.nickname}\"",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 if (!player.active) {
                     Text(
                         "Inactief",
@@ -208,6 +215,14 @@ private fun PlayerDialog(
 ) {
     var name by remember(initialName) { mutableStateOf(initialName) }
     var nickname by remember(initialNickname) { mutableStateOf(initialNickname) }
+    val focusRequester = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+        keyboard?.show()
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
@@ -218,13 +233,23 @@ private fun PlayerDialog(
                     onValueChange = { name = it },
                     singleLine = true,
                     label = { Text("Naam") },
-                    modifier = Modifier.fillMaxWidth()
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Words,
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Next
+                    ),
+                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequester)
                 )
                 OutlinedTextField(
                     value = nickname,
                     onValueChange = { nickname = it },
                     singleLine = true,
                     label = { Text("Nickname (optioneel)") },
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Words,
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Done
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
             }

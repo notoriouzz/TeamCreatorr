@@ -29,7 +29,8 @@ data class PlayerInput(
     val id: Long,
     val name: String,
     val nickname: String?,
-    val active: Boolean
+    val active: Boolean,
+    val photoFileName: String? = null
 )
 
 /** A single participation row (player + team + match result). */
@@ -55,7 +56,8 @@ data class PlayerStats(
     val drawPoints: Int,
     val manualPoints: Int,
     val totalPoints: Int,
-    val rank: Int
+    val rank: Int,
+    val photoFileName: String? = null
 ) {
     /** Automatically earned match points (attendance + win + draw). */
     val autoPoints: Int get() = attendancePoints + winPoints + drawPoints
@@ -79,7 +81,6 @@ data class PlayerRef(
 data class MatchDetail(
     val id: Long,
     val date: Long,
-    val note: String?,
     val teamSize: Int,
     val scoreA: Int?,
     val scoreB: Int?,
@@ -116,7 +117,6 @@ data class PlayerHistoryItem(
     val team: String,
     val scoreA: Int?,
     val scoreB: Int?,
-    val note: String?,
     val status: Int
 )
 

@@ -6,13 +6,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SportsSoccer
 import androidx.compose.material3.*
@@ -20,11 +19,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.first
+import nl.tartaruzz.teamcreatorr.R
 import nl.tartaruzz.teamcreatorr.data.PlayerEntity
-import nl.tartaruzz.teamcreatorr.domain.DuoWithNames
 import nl.tartaruzz.teamcreatorr.domain.PlayerRef
+import nl.tartaruzz.teamcreatorr.ui.components.AppHeader
+import nl.tartaruzz.teamcreatorr.ui.components.DuoMatchManager
 import nl.tartaruzz.teamcreatorr.ui.components.SectionTitle
 import nl.tartaruzz.teamcreatorr.ui.components.TeamCard
 import nl.tartaruzz.teamcreatorr.ui.theme.TeamAColor
@@ -35,27 +38,38 @@ import nl.tartaruzz.teamcreatorr.util.Formatters
 import java.util.Calendar
 
 @Composable
-fun NewMatchScreen(onOpenMatch: (Long) -> Unit) {
+fun NewMatchScreen(onBack: () -> Unit) {
     val vm: NewMatchViewModel = appViewModel()
     val state by vm.state.collectAsState()
     val players by vm.activePlayers.collectAsState()
-    val duos by vm.globalDuos.collectAsState()
+    val duos by vm.duos.collectAsState()
     val context = LocalContext.current
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(state.teamA, state.teamB) {
+        if (state.teamA.isNotEmpty() && state.teamB.isNotEmpty()) {
+            snapshotFlow { listState.layoutInfo.totalItemsCount }
+                .first { it > 0 }
+            listState.animateScrollToItem((listState.layoutInfo.totalItemsCount - 1).coerceAtLeast(0))
+        }
+    }
 
     LaunchedEffect(state.confirmedMatchId) {
-        state.confirmedMatchId?.let { id ->
-            vm.consumeConfirmation()
-            onOpenMatch(id)
+        if (state.confirmedMatchId != null) {
+            snapshotFlow { listState.layoutInfo.totalItemsCount }
+                .first { it > 0 }
+            listState.animateScrollToItem((listState.layoutInfo.totalItemsCount - 1).coerceAtLeast(0))
         }
     }
 
     LazyColumn(
+        state = listState,
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            Text("Nieuwe wedstrijd", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            AppHeader(stringResource(R.string.new_match_title), onBack = onBack)
         }
 
         item {
@@ -69,17 +83,8 @@ fun NewMatchScreen(onOpenMatch: (Long) -> Unit) {
         }
 
         item {
-            SectionTitle("Datum & notitie")
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                DateField(state.date) { vm.setDate(it) }
-                OutlinedTextField(
-                    value = state.note,
-                    onValueChange = { vm.setNote(it) },
-                    label = { Text("Notitie (optioneel)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    maxLines = 3
-                )
-            }
+            SectionTitle("Datum")
+            DateField(state.date) { vm.setDate(it) }
         }
 
         item {
@@ -96,20 +101,19 @@ fun NewMatchScreen(onOpenMatch: (Long) -> Unit) {
         }
 
         item {
-            MatchDuoSection(
-                useGlobalDuos = state.useGlobalDuos,
-                globalDuos = duos,
-                excludedGlobalDuoIds = state.excludedGlobalDuoIds,
-                tempDuos = state.tempDuos,
+            DuoMatchManager(
+                duos = duos,
                 players = players,
-                onToggleGlobal = { vm.setUseGlobalDuos(it) },
-                onExcludeGlobal = { vm.excludeGlobalDuo(it) },
-                onRemoveTemp = { vm.removeTemporaryDuo(it) },
-                onAddTemp = { a, b ->
-                    if (!vm.addTemporaryDuo(a, b)) {
-                        Toast.makeText(context, "Eén van deze spelers zit al in een duo.", Toast.LENGTH_LONG).show()
+                disabledDuoIds = state.disabledDuoIds,
+                onToggleDuo = { vm.toggleDuo(it) },
+                onAdd = { a, b ->
+                    vm.addDuo(a, b) { result ->
+                        if (result is nl.tartaruzz.teamcreatorr.data.Repository.DuoResult.Error) {
+                            Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
+                        }
                     }
-                }
+                },
+                onRemove = { vm.removeDuo(it) }
             )
         }
 
@@ -155,7 +159,7 @@ fun NewMatchScreen(onOpenMatch: (Long) -> Unit) {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (players.isEmpty()) {
                     Text(
-                        "Geen actieve spelers. Voeg eerst spelers toe via Home → Spelers.",
+                        "Geen actieve spelers. Voeg eerst spelers toe via het tabblad Spelers.",
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -173,7 +177,7 @@ fun NewMatchScreen(onOpenMatch: (Long) -> Unit) {
             Button(
                 onClick = { vm.generateTeams() },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = state.canGenerate && !state.confirming
+                enabled = state.canGenerate && !state.confirming && state.confirmedMatchId == null
             ) {
                 Icon(Icons.Filled.SportsSoccer, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.size(6.dp))
@@ -220,21 +224,54 @@ fun NewMatchScreen(onOpenMatch: (Long) -> Unit) {
                     )
                 }
             }
-            item {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { vm.reshuffle() }, modifier = Modifier.weight(1f)) {
-                        Icon(Icons.Filled.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.size(6.dp))
-                        Text("Opnieuw indelen")
+            if (state.confirmedMatchId == null) {
+                item {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = { vm.reshuffle() }, modifier = Modifier.weight(1f)) {
+                            Icon(Icons.Filled.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.size(6.dp))
+                            Text(stringResource(R.string.new_match_again))
+                        }
+                        Button(
+                            onClick = { vm.confirm() },
+                            modifier = Modifier.weight(1f),
+                            enabled = !state.confirming
+                        ) {
+                            Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.size(6.dp))
+                            Text(if (state.confirming) "Opslaan..." else "Bevestigen")
+                        }
                     }
-                    Button(
-                        onClick = { vm.confirm() },
-                        modifier = Modifier.weight(1f),
-                        enabled = !state.confirming
+                }
+            } else {
+                item {
+                    Card(
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
                     ) {
-                        Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.size(6.dp))
-                        Text(if (state.confirming) "Opslaan..." else "Bevestigen")
+                        Column(Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                "Teamindeling opgeslagen",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                "De wedstrijd blijft nog te spelen.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Spacer(Modifier.height(16.dp))
+                            Button(
+                                onClick = onBack,
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                            ) {
+                                Icon(Icons.Filled.Check, contentDescription = null)
+                                Spacer(Modifier.size(6.dp))
+                                Text(stringResource(R.string.new_match_check), fontWeight = FontWeight.Bold)
+                            }
+                        }
                     }
                 }
             }
@@ -311,153 +348,5 @@ private fun PlayerCheckRow(player: PlayerEntity, checked: Boolean, onToggle: () 
     }
 }
 
-@Composable
-private fun MatchDuoSection(
-    useGlobalDuos: Boolean,
-    globalDuos: List<DuoWithNames>,
-    excludedGlobalDuoIds: Set<Long>,
-    tempDuos: List<Pair<Long, Long>>,
-    players: List<PlayerEntity>,
-    onToggleGlobal: (Boolean) -> Unit,
-    onExcludeGlobal: (Long) -> Unit,
-    onRemoveTemp: (Int) -> Unit,
-    onAddTemp: (Long, Long) -> Unit
-) {
-    var showAdd by remember { mutableStateOf(false) }
-    val usedIds = remember(useGlobalDuos, excludedGlobalDuoIds, tempDuos) {
-        val s = mutableSetOf<Long>()
-        if (useGlobalDuos) {
-            globalDuos.filter { it.id !in excludedGlobalDuoIds }.forEach {
-                s.add(it.playerA.id); s.add(it.playerB.id)
-            }
-        }
-        tempDuos.forEach { s.add(it.first); s.add(it.second) }
-        s
-    }
-
-    SectionTitle("Duo's")
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text("Gebruik vaste duo's", modifier = Modifier.weight(1f))
-        Switch(checked = useGlobalDuos, onCheckedChange = onToggleGlobal)
-    }
-
-    var any = false
-    if (useGlobalDuos) {
-        globalDuos.filter { it.id !in excludedGlobalDuoIds }.forEach { duo ->
-            any = true
-            DuoRow(
-                label = "${duo.playerA.name} + ${duo.playerB.name}",
-                tag = "vast duo",
-                onRemove = { onExcludeGlobal(duo.id) }
-            )
-        }
-    }
-    tempDuos.forEachIndexed { index, pair ->
-        any = true
-        DuoRow(
-            label = "${nameOf(pair.first, players)} + ${nameOf(pair.second, players)}",
-            tag = "tijdelijk duo",
-            onRemove = { onRemoveTemp(index) }
-        )
-    }
-    if (!any) {
-        Text(
-            "Geen duo's actief voor deze wedstrijd.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-
-    Spacer(Modifier.height(8.dp))
-    OutlinedButton(onClick = { showAdd = true }, enabled = players.size >= 2) {
-        Icon(Icons.Filled.Link, contentDescription = null, modifier = Modifier.size(18.dp))
-        Spacer(Modifier.size(6.dp))
-        Text("Duo toevoegen (alleen deze wedstrijd)")
-    }
-
-    if (showAdd) {
-        AddTempDuoDialog(
-            players = players.filter { it.id !in usedIds },
-            onDismiss = { showAdd = false },
-            onConfirm = { a, b ->
-                onAddTemp(a, b)
-                showAdd = false
-            }
-        )
-    }
-}
-
-@Composable
-private fun DuoRow(label: String, tag: String, onRemove: () -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(Icons.Filled.Link, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
-        Spacer(Modifier.width(8.dp))
-        Column(Modifier.weight(1f)) {
-            Text(label, style = MaterialTheme.typography.bodyMedium)
-            Text(tag, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        IconButton(onClick = onRemove) {
-            Icon(Icons.Filled.LinkOff, contentDescription = "Ontkoppel", tint = MaterialTheme.colorScheme.error)
-        }
-    }
-}
-
-@Composable
-private fun AddTempDuoDialog(
-    players: List<PlayerEntity>,
-    onDismiss: () -> Unit,
-    onConfirm: (Long, Long) -> Unit
-) {
-    var a by remember { mutableStateOf<PlayerEntity?>(null) }
-    var b by remember { mutableStateOf<PlayerEntity?>(null) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Duo toevoegen") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                TempDropdown("Speler 1", players, a) { a = it }
-                TempDropdown("Speler 2", players, b) { b = it }
-                if (players.size < 2) {
-                    Text("Niet genoeg vrije spelers.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                enabled = a != null && b != null && a!!.id != b!!.id,
-                onClick = { onConfirm(a!!.id, b!!.id) }
-            ) { Text("Koppelen") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Annuleren") }
-        }
-    )
-}
-
-@Composable
-private fun TempDropdown(
-    label: String,
-    players: List<PlayerEntity>,
-    selected: PlayerEntity?,
-    onSelect: (PlayerEntity) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-    Box {
-        OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
-            Text(selected?.name ?: label, modifier = Modifier.weight(1f))
-        }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            players.forEach { p ->
-                DropdownMenuItem(
-                    text = { Text(p.name) },
-                    onClick = { onSelect(p); expanded = false }
-                )
-            }
-        }
-    }
-}
-
-private fun nameOf(id: Long, players: List<PlayerEntity>): String =
-    players.firstOrNull { it.id == id }?.name ?: "Speler"
 
 

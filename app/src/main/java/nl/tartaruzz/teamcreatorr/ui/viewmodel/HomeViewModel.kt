@@ -15,12 +15,9 @@ import nl.tartaruzz.teamcreatorr.domain.MatchStatus
 import nl.tartaruzz.teamcreatorr.domain.PlayerStats
 
 data class HomeUiState(
-    val totalPlayers: Int = 0,
-    val activePlayers: Int = 0,
-    val totalMatches: Int = 0,
-    val upcoming: List<MatchDetail> = emptyList(),
-    val finished: List<MatchDetail> = emptyList(),
+    val hasPlayers: Boolean = false,
     val topThree: List<PlayerStats> = emptyList(),
+    val nextMatch: MatchDetail? = null,
     val latestMatch: MatchDetail? = null,
     val loading: Boolean = true
 )
@@ -40,12 +37,9 @@ class HomeViewModel(repo: Repository) : ViewModel() {
                 val finished = matches.filter { it.status == MatchStatus.FINISHED }
                 val upcoming = matches.filter { it.status != MatchStatus.FINISHED }
                 HomeUiState(
-                    totalPlayers = players.size,
-                    activePlayers = players.count { it.active },
-                    totalMatches = matches.size,
-                    upcoming = upcoming,
-                    finished = finished,
+                    hasPlayers = players.isNotEmpty(),
                     topThree = ranking.filter { it.active }.take(3),
+                    nextMatch = upcoming.firstOrNull(),
                     latestMatch = finished.firstOrNull(),
                     loading = false
                 )

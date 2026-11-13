@@ -13,10 +13,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import nl.tartaruzz.teamcreatorr.R
 import nl.tartaruzz.teamcreatorr.domain.MatchDetail
 import nl.tartaruzz.teamcreatorr.domain.MatchStatus
+import nl.tartaruzz.teamcreatorr.ui.components.AppHeader
 import nl.tartaruzz.teamcreatorr.ui.components.ResultBadge
 import nl.tartaruzz.teamcreatorr.ui.components.statusLabel
 import nl.tartaruzz.teamcreatorr.ui.components.statusColor
@@ -31,9 +34,13 @@ fun HistoryScreen(onOpenMatch: (Long) -> Unit) {
     val vm: HistoryViewModel = appViewModel()
     val matches by vm.matches.collectAsState()
 
-    if (matches.isEmpty()) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+        AppHeader(stringResource(R.string.history_title))
+        if (matches.isEmpty()) {
+            Column(
+                Modifier.fillMaxWidth().padding(top = 48.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Icon(
                     Icons.Filled.History,
                     contentDescription = null,
@@ -41,29 +48,22 @@ fun HistoryScreen(onOpenMatch: (Long) -> Unit) {
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(Modifier.height(8.dp))
-                Text("Nog geen wedstrijden.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.history_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(
-                    "Start een nieuwe wedstrijd via het menu.",
+                    stringResource(R.string.history_empty_sub),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
-        }
-    } else {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            item {
-                Text(
-                    "Wedstrijdgeschiedenis",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            items(matches, key = { it.id }) { match ->
-                MatchCard(match, onClick = { onOpenMatch(match.id) })
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(matches, key = { it.id }) { match ->
+                    MatchCard(match, onClick = { onOpenMatch(match.id) })
+                }
             }
         }
     }

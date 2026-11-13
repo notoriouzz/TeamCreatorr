@@ -21,16 +21,13 @@ import kotlin.random.Random
 data class NewMatchUiState(
     val teamSize: Int = 5,
     val date: Long = System.currentTimeMillis(),
-    val note: String = "",
     val selected: Set<Long> = emptySet(),
     val teamA: List<Long> = emptyList(),
     val teamB: List<Long> = emptyList(),
     val teamARating: Int = 0,
     val teamBRating: Int = 0,
     val useRanking: Boolean = false,
-    val useGlobalDuos: Boolean = true,
-    val excludedGlobalDuoIds: Set<Long> = emptySet(),
-    val tempDuos: List<Pair<Long, Long>> = emptyList(),
+    val disabledDuoIds: Set<Long> = emptySet(),
     val generationError: String? = null,
     val confirming: Boolean = false,
     val confirmedMatchId: Long? = null
@@ -47,7 +44,7 @@ class NewMatchViewModel(private val repo: Repository) : ViewModel() {
     val activePlayers: StateFlow<List<PlayerEntity>> = repo.observeActivePlayers()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val globalDuos: StateFlow<List<DuoWithNames>> = repo.observeDuos()
+    val duos: StateFlow<List<DuoWithNames>> = repo.observeDuos()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val ratings: StateFlow<Map<Long, Int>> = repo.observeRatings()
@@ -66,14 +63,8 @@ class NewMatchViewModel(private val repo: Repository) : ViewModel() {
 
     fun setDate(millis: Long) = _state.value.let { _state.value = it.copy(date = millis) }
 
-    fun setNote(text: String) = _state.value.let { _state.value = it.copy(note = text) }
-
     fun setUseRanking(use: Boolean) = _state.value.let {
         _state.value = it.copy(useRanking = use, teamA = emptyList(), teamB = emptyList(), generationError = null)
-    }
-
-    fun setUseGlobalDuos(use: Boolean) = _state.value.let {
-        _state.value = it.copy(useGlobalDuos = use, teamA = emptyList(), teamB = emptyList(), generationError = null)
     }
 
     fun togglePlayer(id: Long) {
@@ -91,54 +82,31 @@ class NewMatchViewModel(private val repo: Repository) : ViewModel() {
         _state.value = _state.value.copy(selected = emptySet(), teamA = emptyList(), teamB = emptyList(), generationError = null)
     }
 
-    fun excludeGlobalDuo(id: Long) {
-        _state.value = _state.value.copy(
-            excludedGlobalDuoIds = _state.value.excludedGlobalDuoIds + id,
-            teamA = emptyList(), teamB = emptyList(), generationError = null
-        )
-    }
-
-    fun addTemporaryDuo(a: Long, b: Long): Boolean {
+    fun toggleDuo(id: Long) {
         val current = _state.value
-        val used = effectiveDuoPlayers(current)
-        if (a == b || a in used || b in used) return false
-        _state.value = current.copy(
-            tempDuos = current.tempDuos + (a to b),
-            teamA = emptyList(), teamB = emptyList(), generationError = null
-        )
-        return true
+        val disabled = if (id in current.disabledDuoIds) current.disabledDuoIds - id else current.disabledDuoIds + id
+        _state.value = current.copy(disabledDuoIds = disabled, teamA = emptyList(), teamB = emptyList(), generationError = null)
     }
 
-    fun removeTemporaryDuo(index: Int) {
-        val current = _state.value
-        if (index in current.tempDuos.indices) {
-            _state.value = current.copy(
-                tempDuos = current.tempDuos.toMutableList().apply { removeAt(index) },
-                teamA = emptyList(), teamB = emptyList(), generationError = null
-            )
-        }
-    }
-
-    fun effectiveDuos(): List<Pair<Long, Long>> {
-        val current = _state.value
-        val globals = if (current.useGlobalDuos) {
-            globalDuos.value
-                .filter { it.id !in current.excludedGlobalDuoIds }
-                .map { it.playerA.id to it.playerB.id }
-        } else emptyList()
-        return globals + current.tempDuos
-    }
-
-    private fun effectiveDuoPlayers(state: NewMatchUiState): Set<Long> {
-        val used = mutableSetOf<Long>()
-        if (state.useGlobalDuos) {
-            globalDuos.value.filter { it.id !in state.excludedGlobalDuoIds }.forEach {
-                used.add(it.playerA.id); used.add(it.playerB.id)
+    fun addDuo(a: Long, b: Long, onResult: (Repository.DuoResult) -> Unit) {
+        viewModelScope.launch {
+            val result = repo.addDuo(a, b)
+            if (result is Repository.DuoResult.Success) {
+                _state.value = _state.value.copy(teamA = emptyList(), teamB = emptyList(), generationError = null)
             }
+            onResult(result)
         }
-        state.tempDuos.forEach { used.add(it.first); used.add(it.second) }
-        return used
     }
+
+    fun removeDuo(id: Long) {
+        _state.value = _state.value.copy(teamA = emptyList(), teamB = emptyList(), generationError = null)
+        viewModelScope.launch { repo.removeDuo(id) }
+    }
+
+    fun effectiveDuos(): List<Pair<Long, Long>> =
+        duos.value
+            .filter { it.id !in _state.value.disabledDuoIds }
+            .map { it.playerA.id to it.playerB.id }
 
     fun generateTeams() {
         val current = _state.value
@@ -178,19 +146,18 @@ class NewMatchViewModel(private val repo: Repository) : ViewModel() {
 
     fun confirm() {
         val current = _state.value
-        if (current.confirming) return
+        if (current.confirming || current.confirmedMatchId != null) return
         if (current.teamA.isEmpty() || current.teamB.isEmpty()) return
         _state.value = current.copy(confirming = true)
         viewModelScope.launch {
             val id = repo.createMatch(
                 date = current.date,
-                note = current.note,
                 teamSize = current.teamSize,
                 teamA = current.teamA,
                 teamB = current.teamB,
                 duos = effectiveDuos()
             )
-            _state.value = NewMatchUiState(confirmedMatchId = id)
+            _state.value = _state.value.copy(confirming = false, confirmedMatchId = id)
         }
     }
 
@@ -221,8 +188,8 @@ class MatchDetailViewModel(private val repo: Repository) : ViewModel() {
         viewModelScope.launch { repo.updateMatchResult(id, scoreA, scoreB) }
     }
 
-    fun editDetails(id: Long, date: Long, note: String) {
-        viewModelScope.launch { repo.updateMatchDetails(id, date, note) }
+    fun editDetails(id: Long, date: Long) {
+        viewModelScope.launch { repo.updateMatchDetails(id, date) }
     }
 
     fun delete(id: Long) {

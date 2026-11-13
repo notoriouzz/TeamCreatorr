@@ -7,6 +7,7 @@ import android.graphics.ImageDecoder
 import android.graphics.Matrix
 import android.net.Uri
 import android.os.Build
+import android.util.LruCache
 import androidx.exifinterface.media.ExifInterface
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -28,6 +29,35 @@ object PhotoStore {
         if (fileName.isNullOrBlank()) return null
         val f = fileFor(context, fileName)
         return if (f.exists()) f else null
+    }
+
+    private const val AVATAR_MAX = 256
+    private val avatarCache = LruCache<String, Bitmap>(24)
+
+    /**
+     * Loads a downsampled, in-memory cached avatar bitmap. Call from a background
+     * dispatcher; the cache avoids repeated decode work for the same photo.
+     */
+    fun loadAvatar(context: Context, fileName: String?): Bitmap? {
+        if (fileName.isNullOrBlank()) return null
+        avatarCache.get(fileName)?.let { return it }
+        val f = fileFor(context, fileName)
+        if (!f.exists()) return null
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(f.absolutePath, bounds)
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+        var sample = 1
+        while (bounds.outWidth / (sample * 2) >= AVATAR_MAX &&
+            bounds.outHeight / (sample * 2) >= AVATAR_MAX
+        ) {
+            sample *= 2
+        }
+        val bmp = BitmapFactory.decodeFile(
+            f.absolutePath,
+            BitmapFactory.Options().apply { inSampleSize = sample }
+        )
+        if (bmp != null) avatarCache.put(fileName, bmp)
+        return bmp
     }
 
     fun save(context: Context, uri: Uri, playerId: Long): String {

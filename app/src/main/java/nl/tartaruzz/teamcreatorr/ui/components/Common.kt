@@ -12,8 +12,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.SportsSoccer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,11 +26,77 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import nl.tartaruzz.teamcreatorr.R
+import nl.tartaruzz.teamcreatorr.domain.MatchDetail
+import nl.tartaruzz.teamcreatorr.domain.MatchStatus
 import nl.tartaruzz.teamcreatorr.domain.PlayerRef
+import nl.tartaruzz.teamcreatorr.ui.theme.PitchGreen
 import nl.tartaruzz.teamcreatorr.ui.theme.TeamAColor
 import nl.tartaruzz.teamcreatorr.ui.theme.TeamBColor
+
+/** Reusable green page header, matching the Home header style. */
+@Composable
+fun AppHeader(
+    title: String,
+    subtitle: String? = null,
+    onBack: (() -> Unit)? = null,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = PitchGreen)
+    ) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            if (onBack != null) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.back),
+                        tint = Color.White
+                    )
+                }
+            } else {
+                Box(
+                    Modifier
+                        .size(46.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Filled.SportsSoccer,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            }
+            Column {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                if (subtitle != null) {
+                    Text(
+                        subtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.85f)
+                    )
+                }
+            }
+        }
+    }
+}
 
 @Composable
 fun SectionTitle(text: String, modifier: Modifier = Modifier) {
@@ -71,7 +142,7 @@ fun TeamCard(
             Spacer(Modifier.height(10.dp))
             if (players.isEmpty()) {
                 Text(
-                    text = "Nog geen spelers",
+                    text = stringResource(R.string.new_match_no_players),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -131,10 +202,10 @@ fun StatCard(
 @Composable
 fun ResultBadge(detail: nl.tartaruzz.teamcreatorr.domain.MatchDetail) {
     val (label, color) = when {
-        !detail.hasResult -> "Geen uitslag" to MaterialTheme.colorScheme.onSurfaceVariant
-        detail.isDraw -> "Gelijkspel" to MaterialTheme.colorScheme.secondary
-        detail.winnerTeam == "A" -> "Team A wint" to TeamAColor
-        else -> "Team B wint" to TeamBColor
+        !detail.hasResult -> stringResource(R.string.result_no_score) to MaterialTheme.colorScheme.onSurfaceVariant
+        detail.isDraw -> stringResource(R.string.result_draw) to MaterialTheme.colorScheme.secondary
+        detail.winnerTeam == "A" -> stringResource(R.string.result_team_a_wins) to TeamAColor
+        else -> stringResource(R.string.result_team_b_wins) to TeamBColor
     }
     Text(
         text = label,
@@ -174,11 +245,12 @@ fun EmptyState(
     }
 }
 
-/** Human readable label for a match status. */
-fun statusLabel(status: nl.tartaruzz.teamcreatorr.domain.MatchStatus): String = when (status) {
-    nl.tartaruzz.teamcreatorr.domain.MatchStatus.CONFIRMED -> "Teamindeling bevestigd"
-    nl.tartaruzz.teamcreatorr.domain.MatchStatus.PLAYED -> "Gespeeld — uitslag invoeren"
-    nl.tartaruzz.teamcreatorr.domain.MatchStatus.FINISHED -> "Afgerond"
+/** Localized human readable label for a match status. */
+@Composable
+fun statusLabel(status: MatchStatus): String = when (status) {
+    MatchStatus.CONFIRMED -> stringResource(R.string.status_confirmed)
+    MatchStatus.PLAYED -> stringResource(R.string.status_played)
+    MatchStatus.FINISHED -> stringResource(R.string.status_finished)
 }
 
 /** Accent color for a match status. */

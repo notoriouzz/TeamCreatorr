@@ -1,3 +1,237 @@
 <resources>
     <string name="app_name">TeamCreatorr</string>
+
+    <!-- Navigatie -->
+    <string name="nav_home">Home</string>
+    <string name="nav_players">Spelers</string>
+    <string name="nav_match">Wedstrijd</string>
+    <string name="nav_ranking">Ranking</string>
+    <string name="nav_history">Historie</string>
+    <string name="nav_settings">Instellingen</string>
+
+    <!-- Kopbalken -->
+    <string name="header_subtitle">Teams &amp; Ranking</string>
+
+    <!-- Home -->
+    <string name="home_welcome_title">Welkom bij TeamCreatorr!</string>
+    <string name="home_welcome_subtitle">Voeg eerst spelers toe om wedstrijden te maken en een ranking bij te houden.</string>
+    <string name="home_add_players">Spelers toevoegen</string>
+    <string name="home_next_match">Eerstvolgende wedstrijd</string>
+    <string name="home_no_next_match">Geen geplande wedstrijd. Start er één via het tabblad Wedstrijd.</string>
+    <string name="home_ranking">Ranking</string>
+    <string name="home_no_ranking">Nog geen ranking beschikbaar.</string>
+    <string name="home_last_result">Laatste uitslag</string>
+    <string name="home_no_finished">Nog geen afgeronde wedstrijden.</string>
+    <string name="home_full_ranking">Volledige ranking</string>
+    <string name="home_points_suffix">pt</string>
+
+    <!-- Wedstrijdstatussen -->
+    <string name="status_confirmed">Nog te spelen</string>
+    <string name="status_played">Uitslag moet nog worden doorgegeven</string>
+    <string name="status_finished">Afgerond</string>
+    <string name="status_not_played">Nog niet gespeeld</string>
+
+    <!-- Wedstrijdoverzicht -->
+    <string name="match_new_match">Nieuwe wedstrijd</string>
+    <string name="match_no_matches">Nog geen wedstrijden. Start een nieuwe wedstrijd.</string>
+    <string name="match_vs">%1$d tegen %2$d</string>
+    <!-- Nieuwe wedstrijd -->
+    <string name="new_match_title">Nieuwe wedstrijd</string>
+    <string name="new_match_team_size">Teamgrootte</string>
+    <string name="new_match_players_needed">Er zijn %1$d spelers nodig (%2$d tegen %3$d).</string>
+    <string name="new_match_date">Datum</string>
+    <string name="new_match_balanced">Evenwichtige teams</string>
+    <string name="new_match_use_ranking">Houd rekening met ranking</string>
+    <string name="new_match_balanced_desc">Verdeelt de teams zo evenwichtig mogelijk op basis van spelersratings.</string>
+    <string name="new_match_select_players">Spelers selecteren</string>
+    <string name="new_match_selected">%1$d / %2$d geselecteerd</string>
+    <string name="new_match_need_more">Nog %1$d speler(s) nodig.</string>
+    <string name="new_match_too_many">%1$d speler(s) te veel geselecteerd.</string>
+    <string name="new_match_select_all">Iedereen selecteren</string>
+    <string name="new_match_clear_all">Alles wissen</string>
+    <string name="new_match_no_active_players">Geen actieve spelers. Voeg eerst spelers toe via het tabblad Spelers.</string>
+    <string name="new_match_generate">Teams genereren</string>
+    <string name="new_match_team_split">Teamindeling</string>
+    <string name="new_match_team_scores">Teamscores: Team A %1$d · Team B %2$d</string>
+    <string name="new_match_again">Opnieuw</string>
+    <string name="new_match_confirm">Bevestigen</string>
+    <string name="new_match_saving">Opslaan…</string>
+    <string name="new_match_saved">Teamindeling opgeslagen</string>
+    <string name="new_match_saved_desc">De wedstrijd blijft nog te spelen.</string>
+    <string name="new_match_check">Check</string>
+    <string name="new_match_team_a">Team A</string>
+    <string name="new_match_team_b">Team B</string>
+    <string name="new_match_no_players">Nog geen spelers</string>
+
+    <!-- Duo's -->
+    <string name="duo_title">Duo\'s</string>
+    <string name="duo_desc">Spelers die altijd bij elkaar in hetzelfde team moeten zitten. Uitgeschakelde duo\'s doen niet mee.</string>
+    <string name="duo_none">Nog geen duo\'s ingesteld.</string>
+    <string name="duo_add">Duo toevoegen</string>
+    <string name="duo_active">Actief</string>
+    <string name="duo_disabled">Uitgeschakeld</string>
+    <string name="duo_delete">Duo verwijderen</string>
+    <string name="duo_add_title">Duo toevoegen</string>
+    <string name="duo_player1">Speler 1</string>
+    <string name="duo_player2">Speler 2</string>
+    <string name="duo_not_enough">Niet genoeg vrije spelers. Verwijder eerst een duo.</string>
+    <string name="duo_link">Koppelen</string>
+    <!-- Teamgeneratiefouten -->
+    <string name="gen_invalid_team_size">Ongeldige teamgrootte. Kies 3 tot en met 11 spelers per team.</string>
+    <string name="gen_wrong_count">Er zijn precies %1$d spelers nodig voor %2$d tegen %3$d (nu %4$d).</string>
+    <string name="gen_duplicate">Een speler kan niet twee keer geselecteerd worden.</string>
+    <string name="gen_duo_same">Een duo moet uit twee verschillende spelers bestaan.</string>
+    <string name="gen_duo_unselected">Een duo bevat een speler die niet is geselecteerd.</string>
+    <string name="gen_duo_multiple">Een speler kan in maximaal één duo zitten.</string>
+    <string name="gen_duo_too_large">Een gekoppeld duo past niet in een team van %1$d spelers.</string>
+    <string name="gen_too_many_duos">Deze duo-combinatie is niet mogelijk: je hebt %1$d duo\'s ingesteld, maar bij %2$d tegen %3$d passen maximaal %4$d duo\'s over twee even teams. Ontkoppel minimaal %5$d duo(\'s).</string>
+    <string name="gen_no_split">Geen geldige verdeling gevonden voor deze duo-combinatie.</string>
+    <string name="gen_select_exactly">Selecteer precies %1$d spelers.</string>
+
+    <!-- Wedstrijddetail -->
+    <string name="match_detail_title">Wedstrijd</string>
+    <string name="match_detail_teams">Teams</string>
+    <string name="match_detail_share">Deel teamindeling</string>
+    <string name="match_detail_add_result">Uitslag toevoegen</string>
+    <string name="match_detail_not_played_text">Deze wedstrijd moet nog gespeeld worden. Voeg de uitslag toe zodra de wedstrijd heeft plaatsgevonden.</string>
+    <string name="match_detail_score_a">Score Team A</string>
+    <string name="match_detail_score_b">Score Team B</string>
+    <string name="match_detail_save_result">Uitslag opslaan</string>
+    <string name="match_detail_saved">Uitslag opgeslagen</string>
+    <string name="match_detail_invalid_scores">Vul geldige scores in</string>
+    <string name="match_detail_delete">Verwijderen</string>
+    <string name="match_detail_delete_title">Wedstrijd verwijderen</string>
+    <string name="match_detail_delete_finished">Weet je zeker dat je deze wedstrijd wilt verwijderen? Alle punten van deze wedstrijd verdwijnen uit de ranking.</string>
+    <string name="match_detail_delete_unplayed">Weet je zeker dat je deze (nog niet gespeelde) wedstrijd wilt annuleren?</string>
+
+    <!-- Resultaat -->
+    <string name="result_no_score">Geen uitslag</string>
+    <string name="result_draw">Gelijkspel</string>
+    <string name="result_team_a_wins">Team A wint</string>
+    <string name="result_team_b_wins">Team B wint</string>
+    <string name="score_format">Team A %1$d - %2$d Team B</string>
+    <string name="score_empty">Team A - Team B</string>
+
+    <!-- Spelers -->
+    <string name="players_title">Spelers</string>
+    <string name="players_empty">Nog geen spelers. Tik op + om spelers toe te voegen.</string>
+    <string name="players_add_title">Speler toevoegen</string>
+    <string name="players_edit_title">Speler aanpassen</string>
+    <string name="players_name">Naam</string>
+    <string name="players_nickname">Nickname (optioneel)</string>
+    <string name="players_inactive">Inactief</string>
+    <string name="players_delete_title">Speler verwijderen</string>
+    <string name="players_delete_msg">Weet je zeker dat je \'%1$s\' wilt verwijderen? Als deze speler al wedstrijden heeft gespeeld, wordt hij uitgeschakeld zodat de historie behouden blijft.</string>
+    <string name="players_deleted">Speler verwijderd</string>
+    <string name="players_deactivated">Speler uitgeschakeld (historie behouden)</string>
+    <string name="players_added">Spelers toegevoegd</string>
+    <string name="players_bulk_title">Meerdere spelers toevoegen</string>
+    <string name="players_bulk_hint">Voer per regel één naam in.</string>
+    <string name="players_names_label">Namen</string>
+    <string name="players_photo_desc">Profielfoto van %1$s</string>
+    <string name="players_photo_failed">Foto kon niet worden geladen</string>
+    <!-- Profiel -->
+    <string name="profile_points_build">Puntenopbouw</string>
+    <string name="profile_match_history">Wedstrijdgeschiedenis</string>
+    <string name="profile_no_matches_filter">Geen wedstrijden voor dit filter.</string>
+    <string name="profile_position">Positie: #%1$d</string>
+    <string name="profile_rating">Rating: %1$d</string>
+    <string name="profile_points">punten</string>
+    <string name="profile_played">Gespeeld</string>
+    <string name="profile_wins">Winst</string>
+    <string name="profile_losses">Verlies</string>
+    <string name="profile_draws">Gelijk</string>
+    <string name="profile_win_percentage">Winpercentage: %1$d%%</string>
+    <string name="profile_add_adjustment">Punten toevoegen / aftrekken</string>
+    <string name="profile_points_label">Aantal punten (bijv. 5 of -3)</string>
+    <string name="profile_desc_label">Omschrijving (verplicht)</string>
+    <string name="profile_edit_adjustment">Puntmutatie aanpassen</string>
+    <string name="profile_points_short">Aantal punten</string>
+    <string name="profile_desc_short">Omschrijving</string>
+    <string name="profile_no_points">Nog geen punten.</string>
+    <string name="profile_filters_all">Alle</string>
+    <string name="profile_filters_won">Gewonnen</string>
+    <string name="profile_filters_lost">Verloren</string>
+    <string name="profile_filters_draw">Gelijk</string>
+    <string name="profile_outcome_no_result">Geen uitslag</string>
+    <string name="profile_outcome_draw">Gelijkspel</string>
+    <string name="profile_outcome_win">Winst</string>
+    <string name="profile_outcome_loss">Verlies</string>
+    <string name="profile_choose_photo">Foto kiezen</string>
+    <string name="profile_remove_photo">Foto verwijderen</string>
+    <!-- Instellingen -->
+    <string name="settings_title">Instellingen</string>
+    <string name="settings_points">Puntentelling</string>
+    <string name="settings_attendance">Aanwezigheid</string>
+    <string name="settings_win">Winst</string>
+    <string name="settings_draw">Gelijkspel</string>
+    <string name="settings_points_recalc">Bij een wijziging wordt de volledige ranking automatisch herberekend.</string>
+    <string name="settings_points_update">Puntentelling bijwerken</string>
+    <string name="settings_apply_title">Puntentelling toepassen?</string>
+    <string name="settings_apply_msg">De nieuwe puntentelling (aanwezigheid: %1$d, winst: %2$d, gelijkspel: %3$d) wordt toegepast op alle spelers en alle wedstrijden.</string>
+    <string name="settings_apply">Toepassen</string>
+    <string name="settings_invalid_points">Vul geldige punten in</string>
+    <string name="settings_data">Gegevens</string>
+    <string name="settings_export">Exporteren (back-up)</string>
+    <string name="settings_import">Importeren (back-up)</string>
+    <string name="settings_language">Taal</string>
+    <string name="settings_language_desc">Kies de taal van de app.</string>
+    <string name="settings_donate_title">Steun de ontwikkelaar</string>
+    <string name="settings_donate_text">Bevalt de app? Trakteer de ontwikkelaar op een koffie! ☕ Dan blijf ik met plezier nieuwe functies bouwen.</string>
+    <string name="settings_donate_button">Steun via Ko-fi</string>
+    <string name="settings_about">Over</string>
+    <string name="settings_about_text">TeamCreatorr v1.2.0\nTeams &amp; Ranking.\nAlle gegevens worden lokaal op dit apparaat opgeslagen.</string>
+    <string name="settings_reset">Reset</string>
+    <string name="settings_reset_desc">Verwijder gegevens uit de app.</string>
+    <string name="settings_reset_all">Alles resetten</string>
+    <string name="settings_reset_matches">Alleen wedstrijdgeschiedenis resetten</string>
+    <string name="settings_reset_players">Alleen spelers resetten</string>
+    <string name="settings_reset_ranking">Alleen ranking resetten</string>
+
+    <!-- Taal -->
+    <string name="lang_dutch">Nederlands</string>
+    <string name="lang_english">English</string>
+    <string name="lang_turkish">Türkçe</string>
+
+    <!-- Exporteren/importeren -->
+    <string name="export_success">Back-up geëxporteerd</string>
+    <string name="export_failed">Exporteren mislukt</string>
+    <string name="import_title">Back-up importeren</string>
+    <string name="import_preview">Het back-upbestand bevat: %1$d spelers, %2$d wedstrijden, %3$d duo\'s.</string>
+    <string name="import_mode_replace">Bestaande gegevens vervangen</string>
+    <string name="import_mode_merge">Samenvoegen met bestaande gegevens</string>
+    <string name="import_confirm_title">Importeren?</string>
+    <string name="import_confirm_msg">Hoe wil je de back-up importeren?</string>
+    <string name="import_success">Back-up geïmporteerd</string>
+    <string name="import_failed">Importeren mislukt</string>
+    <string name="import_invalid">Ongeldig of incompatibel back-upbestand</string>
+    <string name="import_nothing">Geen geldige gegevens in het back-upbestand</string>
+
+    <!-- Reset -->
+    <string name="reset_confirm_title">Reset bevestigen</string>
+    <string name="reset_confirm_all">Weet je zeker dat je ALLES wilt resetten? Alle spelers, wedstrijden, duo\'s en instellingen worden definitief verwijderd.</string>
+    <string name="reset_confirm_matches">Weet je zeker dat je alle wedstrijdgeschiedenis wilt verwijderen? Spelers blijven behouden.</string>
+    <string name="reset_confirm_players">Weet je zeker dat je alle spelers wilt verwijderen? Ook wedstrijden, duo\'s en ranking verdwijnen.</string>
+    <string name="reset_confirm_ranking">Weet je zeker dat je de ranking wilt resetten? Handmatige puntmutaties worden verwijderd. Wedstrijdgeschiedenis en spelers blijven behouden.</string>
+    <string name="reset_done">Reset uitgevoerd</string>
+
+    <!-- Algemeen -->
+    <string name="back">Terug</string>
+    <string name="save">Opslaan</string>
+    <string name="cancel">Annuleren</string>
+    <string name="delete">Verwijderen</string>
+    <string name="add">Toevoegen</string>
+    <string name="edit">Bewerken</string>
+    <string name="history_title">Historie</string>
+    <string name="history_empty">Nog geen wedstrijden.</string>
+    <string name="history_empty_sub">Start een nieuwe wedstrijd via het menu.</string>
+    <string name="ranking_title">Ranking</string>
+    <string name="ranking_empty">Nog geen ranking.</string>
+    <string name="ranking_empty_sub">Speel wedstrijden om punten te verdienen.</string>
+    <string name="ranking_rest">Overige spelers</string>
+    <string name="ranking_position">Positie %1$d</string>
 </resources>
+
+
+
+

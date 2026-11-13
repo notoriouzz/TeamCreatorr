@@ -9,7 +9,9 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,9 +19,15 @@ import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.layout.*
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.*
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -28,6 +36,11 @@ import nl.tartaruzz.teamcreatorr.domain.ManualAdjustment
 import nl.tartaruzz.teamcreatorr.domain.PlayerHistoryItem
 import nl.tartaruzz.teamcreatorr.domain.PlayerProfileUiData
 import nl.tartaruzz.teamcreatorr.domain.PointHistoryEntry
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.window.Dialog
+import nl.tartaruzz.teamcreatorr.R
+import nl.tartaruzz.teamcreatorr.ui.components.AppHeader
+import nl.tartaruzz.teamcreatorr.ui.components.PlayerAvatar
 import nl.tartaruzz.teamcreatorr.ui.components.SectionTitle
 import nl.tartaruzz.teamcreatorr.ui.theme.TeamAColor
 import nl.tartaruzz.teamcreatorr.ui.theme.TeamBColor
@@ -58,6 +71,7 @@ fun PlayerProfileScreen(
     var showEdit by remember { mutableStateOf(false) }
     var showAddAdjustment by remember { mutableStateOf(false) }
     var editingAdjustment by remember { mutableStateOf<ManualAdjustment?>(null) }
+    var showBigAvatar by remember { mutableStateOf(false) }
 
     val pickPhoto = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         uri?.let {
@@ -75,19 +89,15 @@ fun PlayerProfileScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(profile?.name ?: "Speler") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Terug")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { showEdit = true }) {
-                        Icon(Icons.Filled.Edit, contentDescription = "Bewerken")
-                    }
+            Box {
+                AppHeader(profile?.name ?: stringResource(R.string.players_title), onBack = onBack)
+                IconButton(
+                    onClick = { showEdit = true },
+                    modifier = Modifier.align(Alignment.CenterEnd).padding(end = 8.dp)
+                ) {
+                    Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.edit), tint = androidx.compose.ui.graphics.Color.White)
                 }
-            )
+            }
         }
     ) { padding ->
         val data = profile
@@ -96,7 +106,6 @@ fun PlayerProfileScreen(
                 CircularProgressIndicator()
             }
         } else {
-            val photoFile = PhotoStore.load(context, data.photoFileName)
             LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(padding),
                 contentPadding = PaddingValues(16.dp),
@@ -105,12 +114,7 @@ fun PlayerProfileScreen(
                 item {
                     ProfileHeader(
                         data = data,
-                        photoFile = photoFile,
-                        onPickPhoto = { pickPhoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
-                        onRemovePhoto = {
-                            PhotoStore.delete(context, data.photoFileName)
-                            vm.updatePhoto(data.playerId, null)
-                        }
+                        onOpenPhoto = { showBigAvatar = true }
                     )
                 }
 
@@ -142,16 +146,52 @@ fun PlayerProfileScreen(
         }
     }
 
+    if (showBigAvatar && profile != null) {
+        Dialog(onDismissRequest = { showBigAvatar = false }) {
+            Box(
+                Modifier.fillMaxSize().clickable { showBigAvatar = false },
+                contentAlignment = Alignment.Center
+            ) {
+                PlayerAvatar(profile!!.name, profile!!.photoFileName, size = 220.dp, borderWidth = 4.dp)
+            }
+        }
+    }
+
     if (showEdit && profile != null) {
         var name by remember(profile!!.playerId) { mutableStateOf(profile!!.name) }
         var nickname by remember(profile!!.playerId) { mutableStateOf(profile!!.nickname ?: "") }
         AlertDialog(
             onDismissRequest = { showEdit = false },
-            title = { Text("Speler aanpassen") },
+            title = { Text(stringResource(R.string.players_edit_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Naam") }, singleLine = true)
-                    OutlinedTextField(value = nickname, onValueChange = { nickname = it }, label = { Text("Nickname (optioneel)") }, singleLine = true)
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text("Naam") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Words,
+                            keyboardType = KeyboardType.Text,
+                            imeAction = ImeAction.Next
+                        )
+                    )
+                    OutlinedTextField(
+                        value = nickname,
+                        onValueChange = { nickname = it },
+                        label = { Text("Nickname (optioneel)") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Words,
+                            keyboardType = KeyboardType.Text,
+                            imeAction = ImeAction.Done
+                        )
+                    )
+                    TextButton(onClick = { pickPhoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) {
+                        Icon(Icons.Filled.PhotoCamera, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.size(6.dp))
+                        Text(stringResource(R.string.profile_choose_photo))
+                    }
                 }
             },
             confirmButton = {
@@ -222,14 +262,12 @@ fun PlayerProfileScreen(
 @Composable
 private fun ProfileHeader(
     data: PlayerProfileUiData,
-    photoFile: File?,
-    onPickPhoto: () -> Unit,
-    onRemovePhoto: () -> Unit
+    onOpenPhoto: () -> Unit
 ) {
     Card(shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Column(Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                PhotoAvatar(photoFile, data.name)
+                PlayerAvatar(data.name, data.photoFileName, size = 72.dp, modifier = Modifier.clickable { onOpenPhoto() })
                 Column(Modifier.weight(1f)) {
                     Text(data.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     if (!data.nickname.isNullOrBlank()) {
@@ -255,10 +293,10 @@ private fun ProfileHeader(
 
             Spacer(Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                HeaderStat("Deelnames", "${data.stats?.played ?: 0}", Modifier.weight(1f))
-                HeaderStat("Winst", "${data.stats?.wins ?: 0}", Modifier.weight(1f))
-                HeaderStat("Verlies", "${data.stats?.losses ?: 0}", Modifier.weight(1f))
-                HeaderStat("Gelijk", "${data.stats?.draws ?: 0}", Modifier.weight(1f))
+                HeaderStat(stringResource(R.string.profile_played), "${data.stats?.played ?: 0}", Modifier.weight(1f))
+                HeaderStat(stringResource(R.string.profile_wins), "${data.stats?.wins ?: 0}", Modifier.weight(1f))
+                HeaderStat(stringResource(R.string.profile_losses), "${data.stats?.losses ?: 0}", Modifier.weight(1f))
+                HeaderStat(stringResource(R.string.profile_draws), "${data.stats?.draws ?: 0}", Modifier.weight(1f))
             }
             Spacer(Modifier.height(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -271,46 +309,6 @@ private fun ProfileHeader(
                 )
             }
             Spacer(Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = onPickPhoto, modifier = Modifier.weight(1f)) {
-                    Icon(Icons.Filled.PhotoCamera, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.size(6.dp))
-                    Text("Foto wijzigen")
-                }
-                if (photoFile != null) {
-                    OutlinedButton(onClick = onRemovePhoto, modifier = Modifier.weight(1f)) {
-                        Text("Verwijderen")
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun PhotoAvatar(file: File?, name: String) {
-    val bitmap = remember(file?.absolutePath) { file?.let { BitmapFactory.decodeFile(it.absolutePath) } }
-    Box(
-        Modifier
-            .size(72.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.primary),
-        contentAlignment = Alignment.Center
-    ) {
-        if (bitmap != null) {
-            Image(
-                bitmap = bitmap.asImageBitmap(),
-                contentDescription = "Profielfoto",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
-        } else {
-            Text(
-                name.take(1).uppercase(),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimary
-            )
         }
     }
 }

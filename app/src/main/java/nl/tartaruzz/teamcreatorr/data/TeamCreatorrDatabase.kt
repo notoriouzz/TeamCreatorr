@@ -17,7 +17,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         PointAdjustmentEntity::class,
         SettingsEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class TeamCreatorrDatabase : RoomDatabase() {
@@ -66,13 +66,38 @@ abstract class TeamCreatorrDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Drop the (unused) note column from matches. SQLite < 3.35 does not
+                // support ALTER TABLE ... DROP COLUMN, so recreate the table.
+                db.execSQL("PRAGMA foreign_keys = OFF")
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `matches_new` (" +
+                        "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`date` INTEGER NOT NULL, " +
+                        "`teamSize` INTEGER NOT NULL, " +
+                        "`scoreA` INTEGER, " +
+                        "`scoreB` INTEGER, " +
+                        "`status` INTEGER NOT NULL, " +
+                        "`createdAt` INTEGER NOT NULL)"
+                )
+                db.execSQL(
+                    "INSERT INTO `matches_new` (`id`,`date`,`teamSize`,`scoreA`,`scoreB`,`status`,`createdAt`) " +
+                        "SELECT `id`,`date`,`teamSize`,`scoreA`,`scoreB`,`status`,`createdAt` FROM `matches`"
+                )
+                db.execSQL("DROP TABLE `matches`")
+                db.execSQL("ALTER TABLE `matches_new` RENAME TO `matches`")
+                db.execSQL("PRAGMA foreign_keys = ON")
+            }
+        }
+
         fun get(context: Context): TeamCreatorrDatabase =
             instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
                     context.applicationContext,
                     TeamCreatorrDatabase::class.java,
                     "teamcreatorr.db"
-                ).addMigrations(MIGRATION_1_2).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build().also { instance = it }
             }
     }
 }

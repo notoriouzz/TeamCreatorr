@@ -180,7 +180,6 @@ class Repository(private val db: TeamCreatorrDatabase) {
         return MatchDetail(
             id = match.id,
             date = match.date,
-            note = match.note,
             teamSize = match.teamSize,
             scoreA = match.scoreA,
             scoreB = match.scoreB,
@@ -192,14 +191,13 @@ class Repository(private val db: TeamCreatorrDatabase) {
 
     suspend fun createMatch(
         date: Long,
-        note: String?,
         teamSize: Int,
         teamA: List<Long>,
         teamB: List<Long>,
         duos: List<Pair<Long, Long>>
     ): Long = db.withTransaction {
         val matchId = db.matchDao().insert(
-            MatchEntity(date = date, note = note?.trim()?.ifEmpty { null }, teamSize = teamSize, status = 0)
+            MatchEntity(date = date, teamSize = teamSize, status = 0)
         )
         val entries = teamA.map { MatchPlayerEntity(matchId, it, "A") } +
             teamB.map { MatchPlayerEntity(matchId, it, "B") }
@@ -218,8 +216,8 @@ class Repository(private val db: TeamCreatorrDatabase) {
         db.matchDao().updateScore(id, scoreA, scoreB)
     }
 
-    suspend fun updateMatchDetails(id: Long, date: Long, note: String?) {
-        db.matchDao().updateDetails(id, date, note?.trim()?.ifEmpty { null })
+    suspend fun updateMatchDetails(id: Long, date: Long) {
+        db.matchDao().updateDetails(id, date)
     }
 
     suspend fun deleteMatch(id: Long) {
@@ -239,7 +237,7 @@ class Repository(private val db: TeamCreatorrDatabase) {
             val manualMap = pointRows.groupBy { it.playerId }
                 .mapValues { (_, v) -> v.sumOf { it.points } }
             RankingCalculator.compute(
-                players.map { PlayerInput(it.id, it.name, it.nickname, it.active) },
+                players.map { PlayerInput(it.id, it.name, it.nickname, it.active, it.photoFileName) },
                 participations,
                 manualMap,
                 PointSettings(s.attendancePoints, s.winPoints, s.drawPoints)
@@ -328,5 +326,99 @@ class Repository(private val db: TeamCreatorrDatabase) {
             entries.add(PointHistoryEntry(a.createdAt, a.description, a.points, true, a.id))
         }
         return entries.sortedByDescending { it.date }
+    }
+
+    // ---- Backup & reset ---------------------------------------------------
+
+    suspend fun exportBackupJson(): String {
+        val payload = Backup.Payload(
+            settings = db.settingsDao().get() ?: SettingsEntity(),
+            players = db.playerDao().getAll(),
+            matches = db.matchDao().getAll(),
+            matchPlayers = db.matchPlayerDao().getAllRows(),
+            duos = db.duoDao().getAll(),
+            matchDuos = db.matchDuoDao().getAll(),
+            adjustments = db.pointAdjustmentDao().getAll()
+        )
+        return Backup.toJson(payload)
+    }
+
+    sealed interface ImportResult {
+        data class Success(val players: Int, val matches: Int, val duos: Int) : ImportResult
+        data object Invalid : ImportResult
+    }
+
+    suspend fun importBackupJson(json: String, replace: Boolean): ImportResult {
+        val payload = Backup.parse(json) ?: return ImportResult.Invalid
+        db.withTransaction {
+            if (replace) {
+                db.matchDao().deleteAll()
+                db.matchDuoDao().deleteAll()
+                db.duoDao().deleteAll()
+                db.pointAdjustmentDao().deleteAll()
+                db.playerDao().deleteAll()
+            }
+            val existing = db.playerDao().getAll().associateBy { it.name.trim().lowercase() }
+            val playerIdMap = mutableMapOf<Long, Long>()
+            for (p in payload.players) {
+                val prev = if (replace) null else existing[p.name.trim().lowercase()]
+                val newId = if (prev != null) prev.id
+                else db.playerDao().insert(PlayerEntity(name = p.name, nickname = p.nickname, active = p.active, createdAt = p.createdAt))
+                playerIdMap[p.id] = newId
+            }
+            val matchIdMap = mutableMapOf<Long, Long>()
+            for (m in payload.matches) {
+                val newId = db.matchDao().insert(MatchEntity(date = m.date, teamSize = m.teamSize, scoreA = m.scoreA, scoreB = m.scoreB, status = m.status, createdAt = m.createdAt))
+                matchIdMap[m.id] = newId
+            }
+            for (mp in payload.matchPlayers) {
+                val pid = playerIdMap[mp.playerId] ?: continue
+                val mid = matchIdMap[mp.matchId] ?: continue
+                db.matchPlayerDao().insertAll(listOf(MatchPlayerEntity(mid, pid, mp.team)))
+            }
+            for (d in payload.duos) {
+                val a = playerIdMap[d.playerAId] ?: continue
+                val b = playerIdMap[d.playerBId] ?: continue
+                db.duoDao().insert(DuoEntity(playerAId = a, playerBId = b))
+            }
+            for (d in payload.matchDuos) {
+                val a = playerIdMap[d.playerAId] ?: continue
+                val b = playerIdMap[d.playerBId] ?: continue
+                val mid = matchIdMap[d.matchId] ?: continue
+                db.matchDuoDao().insertAll(listOf(MatchDuoEntity(mid, a, b)))
+            }
+            for (a in payload.adjustments) {
+                val pid = playerIdMap[a.playerId] ?: continue
+                db.pointAdjustmentDao().insert(PointAdjustmentEntity(playerId = pid, points = a.points, description = a.description, createdAt = a.createdAt))
+            }
+            db.settingsDao().deleteAll()
+            db.settingsDao().insert(payload.settings.copy(id = 1))
+        }
+        return ImportResult.Success(payload.players.size, payload.matches.size, payload.duos.size)
+    }
+
+    suspend fun resetAll() = db.withTransaction {
+        db.matchDao().deleteAll()
+        db.matchDuoDao().deleteAll()
+        db.duoDao().deleteAll()
+        db.pointAdjustmentDao().deleteAll()
+        db.playerDao().deleteAll()
+        db.settingsDao().deleteAll()
+    }
+
+    suspend fun resetMatches() = db.withTransaction {
+        db.matchDao().deleteAll()
+    }
+
+    suspend fun resetPlayers() = db.withTransaction {
+        db.matchDao().deleteAll()
+        db.matchDuoDao().deleteAll()
+        db.duoDao().deleteAll()
+        db.pointAdjustmentDao().deleteAll()
+        db.playerDao().deleteAll()
+    }
+
+    suspend fun resetRanking() = db.withTransaction {
+        db.pointAdjustmentDao().deleteAll()
     }
 }

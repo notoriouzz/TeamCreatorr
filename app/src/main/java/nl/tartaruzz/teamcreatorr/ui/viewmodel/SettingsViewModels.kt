@@ -6,9 +6,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import nl.tartaruzz.teamcreatorr.data.PlayerEntity
 import nl.tartaruzz.teamcreatorr.data.Repository
-import nl.tartaruzz.teamcreatorr.domain.DuoWithNames
 import nl.tartaruzz.teamcreatorr.domain.MatchDetail
 import nl.tartaruzz.teamcreatorr.domain.PlayerStats
 import nl.tartaruzz.teamcreatorr.domain.PointSettings
@@ -17,12 +15,6 @@ class SettingsViewModel(private val repo: Repository) : ViewModel() {
 
     val settings: StateFlow<PointSettings> = repo.observeSettings()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), PointSettings(1, 2, 1))
-
-    val duos: StateFlow<List<DuoWithNames>> = repo.observeDuos()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-
-    val players: StateFlow<List<PlayerEntity>> = repo.observeActivePlayers()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val ranking: StateFlow<List<PlayerStats>> = repo.observeRanking()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
@@ -34,11 +26,16 @@ class SettingsViewModel(private val repo: Repository) : ViewModel() {
         viewModelScope.launch { repo.updateSettings(attendancePoints, winPoints, drawPoints) }
     }
 
-    fun addDuo(playerAId: Long, playerBId: Long, onResult: (Repository.DuoResult) -> Unit) {
-        viewModelScope.launch { onResult(repo.addDuo(playerAId, playerBId)) }
+    fun exportBackup(onResult: (String?) -> Unit) {
+        viewModelScope.launch { onResult(runCatching { repo.exportBackupJson() }.getOrNull()) }
     }
 
-    fun removeDuo(id: Long) {
-        viewModelScope.launch { repo.removeDuo(id) }
+    fun importBackup(json: String, replace: Boolean, onResult: (Repository.ImportResult) -> Unit) {
+        viewModelScope.launch { onResult(repo.importBackupJson(json, replace)) }
     }
+
+    fun resetAll(onDone: () -> Unit = {}) = viewModelScope.launch { repo.resetAll(); onDone() }
+    fun resetMatches(onDone: () -> Unit = {}) = viewModelScope.launch { repo.resetMatches(); onDone() }
+    fun resetPlayers(onDone: () -> Unit = {}) = viewModelScope.launch { repo.resetPlayers(); onDone() }
+    fun resetRanking(onDone: () -> Unit = {}) = viewModelScope.launch { repo.resetRanking(); onDone() }
 }

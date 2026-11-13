@@ -1,21 +1,29 @@
 package nl.tartaruzz.teamcreatorr.ui.components
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import nl.tartaruzz.teamcreatorr.data.PlayerEntity
 import nl.tartaruzz.teamcreatorr.domain.DuoWithNames
 
+/**
+ * Duo management for the match screen only. Saved duos are shown with a
+ * per-duo on/off switch; disabled duos are ignored for the current match.
+ */
 @Composable
-fun DuoManagerSection(
+fun DuoMatchManager(
     duos: List<DuoWithNames>,
     players: List<PlayerEntity>,
+    disabledDuoIds: Set<Long>,
+    onToggleDuo: (Long) -> Unit,
     onAdd: (Long, Long) -> Unit,
     onRemove: (Long) -> Unit
 ) {
@@ -23,13 +31,12 @@ fun DuoManagerSection(
 
     Column {
         Text(
-            "Duo's (blijven bij elkaar)",
+            "Duo's",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
-        Spacer(Modifier.height(4.dp))
         Text(
-            "Koppel twee spelers die altijd in hetzelfde team moeten zitten.",
+            "Spelers die altijd bij elkaar in hetzelfde team moeten zitten. Uitgeschakelde duo's doen niet mee.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -37,32 +44,18 @@ fun DuoManagerSection(
 
         if (duos.isEmpty()) {
             Text(
-                "Geen duo's ingesteld.",
+                "Nog geen duo's ingesteld.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         } else {
             duos.forEach { duo ->
-                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Filled.Link,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        "${duo.playerA.name} + ${duo.playerB.name}",
-                        modifier = Modifier.weight(1f)
-                    )
-                    IconButton(onClick = { onRemove(duo.id) }) {
-                        Icon(
-                            Icons.Filled.LinkOff,
-                            contentDescription = "Ontkoppel",
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
-                }
+                DuoRow(
+                    duo = duo,
+                    enabled = duo.id !in disabledDuoIds,
+                    onToggle = { onToggleDuo(duo.id) },
+                    onRemove = { onRemove(duo.id) }
+                )
             }
         }
 
@@ -84,6 +77,54 @@ fun DuoManagerSection(
                 showAdd = false
             }
         )
+    }
+}
+
+@Composable
+private fun DuoRow(
+    duo: DuoWithNames,
+    enabled: Boolean,
+    onToggle: () -> Unit,
+    onRemove: () -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (enabled) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Row(
+            Modifier.fillMaxWidth().padding(start = 12.dp, end = 4.dp, top = 2.dp, bottom = 2.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                Icons.Filled.Link,
+                contentDescription = null,
+                tint = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(Modifier.width(8.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    "${duo.playerA.name} + ${duo.playerB.name}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    if (enabled) "Actief" else "Uitgeschakeld",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(checked = enabled, onCheckedChange = { onToggle() })
+            IconButton(onClick = onRemove) {
+                Icon(
+                    Icons.Filled.Delete,
+                    contentDescription = "Duo verwijderen",
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+        }
     }
 }
 
@@ -110,7 +151,7 @@ private fun AddDuoDialog(
                 PlayerDropdown("Speler 2", available, b) { b = it }
                 if (available.size < 2) {
                     Text(
-                        "Niet genoeg vrije spelers. Ontkoppel eerst een duo.",
+                        "Niet genoeg vrije spelers. Verwijder eerst een duo.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error
                     )

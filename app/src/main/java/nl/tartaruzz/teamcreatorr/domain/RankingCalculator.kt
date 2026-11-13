@@ -39,6 +39,7 @@ object RankingCalculator {
                 name = player.name,
                 nickname = player.nickname,
                 active = player.active,
+                photoFileName = player.photoFileName,
                 played = played,
                 wins = wins,
                 losses = losses,

@@ -37,6 +37,12 @@ interface PlayerDao {
 
     @Query("DELETE FROM players WHERE id = :id")
     suspend fun deleteById(id: Long)
+
+    @Query("SELECT * FROM players")
+    suspend fun getAll(): List<PlayerEntity>
+
+    @Query("DELETE FROM players")
+    suspend fun deleteAll()
 }
 
 @Dao
@@ -56,11 +62,17 @@ interface MatchDao {
     @Query("UPDATE matches SET status = 1 WHERE id = :id")
     suspend fun markPlayed(id: Long)
 
-    @Query("UPDATE matches SET date = :date, note = :note WHERE id = :id")
-    suspend fun updateDetails(id: Long, date: Long, note: String?)
+    @Query("UPDATE matches SET date = :date WHERE id = :id")
+    suspend fun updateDetails(id: Long, date: Long)
 
     @Query("DELETE FROM matches WHERE id = :id")
     suspend fun deleteById(id: Long)
+
+    @Query("SELECT * FROM matches")
+    suspend fun getAll(): List<MatchEntity>
+
+    @Query("DELETE FROM matches")
+    suspend fun deleteAll()
 }
 
 @Dao
@@ -79,7 +91,7 @@ interface MatchPlayerDao {
 
     @Query(
         "SELECT mp.matchId AS matchId, m.date AS date, mp.team AS team, " +
-            "m.scoreA AS scoreA, m.scoreB AS scoreB, m.note AS note, m.status AS status " +
+            "m.scoreA AS scoreA, m.scoreB AS scoreB, m.status AS status " +
             "FROM match_players mp JOIN matches m ON m.id = mp.matchId " +
             "WHERE mp.playerId = :playerId ORDER BY m.date DESC, m.id DESC"
     )
@@ -90,6 +102,12 @@ interface MatchPlayerDao {
 
     @Query("SELECT * FROM match_players")
     fun observeAllRows(): Flow<List<MatchPlayerEntity>>
+
+    @Query("SELECT * FROM match_players")
+    suspend fun getAllRows(): List<MatchPlayerEntity>
+
+    @Query("DELETE FROM match_players")
+    suspend fun deleteAll()
 }
 
 @Dao
@@ -105,6 +123,9 @@ interface DuoDao {
 
     @Query("DELETE FROM duos")
     suspend fun deleteAll()
+
+    @Query("SELECT * FROM duos")
+    suspend fun getAll(): List<DuoEntity>
 }
 
 @Dao
@@ -117,6 +138,12 @@ interface MatchDuoDao {
 
     @Query("DELETE FROM match_duos WHERE matchId = :matchId")
     suspend fun deleteForMatch(matchId: Long)
+
+    @Query("SELECT * FROM match_duos")
+    suspend fun getAll(): List<MatchDuoEntity>
+
+    @Query("DELETE FROM match_duos")
+    suspend fun deleteAll()
 }
 
 data class DuoPair(
@@ -143,6 +170,12 @@ interface PointAdjustmentDao {
 
     @Query("SELECT playerId, points FROM point_adjustments")
     fun observeAllForRanking(): Flow<List<PlayerPointsRow>>
+
+    @Query("SELECT * FROM point_adjustments")
+    suspend fun getAll(): List<PointAdjustmentEntity>
+
+    @Query("DELETE FROM point_adjustments")
+    suspend fun deleteAll()
 }
 
 data class PlayerPointsRow(
@@ -163,4 +196,7 @@ interface SettingsDao {
 
     @Update
     suspend fun update(settings: SettingsEntity)
+
+    @Query("DELETE FROM settings")
+    suspend fun deleteAll()
 }

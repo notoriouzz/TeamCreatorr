@@ -1,235 +1,277 @@
 package nl.tartaruzz.teamcreatorr.ui.screens.settings
 
+import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import nl.tartaruzz.teamcreatorr.domain.MatchDetail
-import nl.tartaruzz.teamcreatorr.domain.MatchStatus
-import nl.tartaruzz.teamcreatorr.domain.PlayerStats
-import nl.tartaruzz.teamcreatorr.domain.PointSettings
-import nl.tartaruzz.teamcreatorr.ui.components.DuoManagerSection
+import nl.tartaruzz.teamcreatorr.R
+import nl.tartaruzz.teamcreatorr.data.Backup
+import nl.tartaruzz.teamcreatorr.data.Repository
+import nl.tartaruzz.teamcreatorr.ui.components.AppHeader
+import nl.tartaruzz.teamcreatorr.ui.components.NumberPicker
 import nl.tartaruzz.teamcreatorr.ui.components.SectionTitle
 import nl.tartaruzz.teamcreatorr.ui.viewmodel.SettingsViewModel
 import nl.tartaruzz.teamcreatorr.ui.viewmodel.appViewModel
-import nl.tartaruzz.teamcreatorr.util.Formatters
+import nl.tartaruzz.teamcreatorr.util.LanguagePrefs
+
+private data class ImportPreview(val json: String, val players: Int, val matches: Int, val duos: Int)
+private enum class ResetKind { ALL, MATCHES, PLAYERS, RANKING }
 
 @Composable
-fun SettingsScreen(onOpenPlayers: () -> Unit) {
+fun SettingsScreen() {
     val vm: SettingsViewModel = appViewModel()
     val settings by vm.settings.collectAsState()
-    val duos by vm.duos.collectAsState()
-    val players by vm.players.collectAsState()
-    val ranking by vm.ranking.collectAsState()
-    val matches by vm.matches.collectAsState()
     val context = LocalContext.current
 
-    var attText by remember { mutableStateOf("") }
-    var winText by remember { mutableStateOf("") }
-    var drawText by remember { mutableStateOf("") }
+    var att by remember { mutableStateOf(1) }
+    var win by remember { mutableStateOf(2) }
+    var draw by remember { mutableStateOf(1) }
     var initialized by remember { mutableStateOf(false) }
     var showConfirm by remember { mutableStateOf(false) }
+    var resetKind by remember { mutableStateOf<ResetKind?>(null) }
+    var importPreview by remember { mutableStateOf<ImportPreview?>(null) }
 
     LaunchedEffect(settings) {
         if (!initialized) {
-            attText = settings.attendancePoints.toString()
-            winText = settings.winPoints.toString()
-            drawText = settings.drawPoints.toString()
+            att = settings.attendancePoints
+            win = settings.winPoints
+            draw = settings.drawPoints
             initialized = true
         }
     }
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        item {
-            Text("Instellingen", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        }
-
-        item {
-            SectionTitle("Puntentelling")
-            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(
-                            value = attText,
-                            onValueChange = { attText = it },
-                            label = { Text("Aanwezigheid") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier.weight(1f)
-                        )
-                        OutlinedTextField(
-                            value = winText,
-                            onValueChange = { winText = it },
-                            label = { Text("Winst") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    OutlinedTextField(
-                        value = drawText,
-                        onValueChange = { drawText = it },
-                        label = { Text("Gelijkspel") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Text(
-                        "Bij een wijziging wordt de volledige ranking automatisch herberekend.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Button(
-                        onClick = {
-                            val a = attText.toIntOrNull()
-                            val w = winText.toIntOrNull()
-                            val d = drawText.toIntOrNull()
-                            if (a != null && w != null && d != null && a >= 0 && w >= 0 && d >= 0) {
-                                showConfirm = true
-                            } else {
-                                Toast.makeText(context, "Vul geldige punten in", Toast.LENGTH_SHORT).show()
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Puntentelling opslaan")
-                    }
-                }
+    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        if (uri != null) {
+            vm.exportBackup { json ->
+                val ok = if (json != null) {
+                    runCatching {
+                        context.contentResolver.openOutputStream(uri)?.use { it.write(json.toByteArray()) }
+                        true
+                    }.getOrDefault(false)
+                } else false
+                Toast.makeText(context, context.getString(if (ok) R.string.export_success else R.string.export_failed), Toast.LENGTH_SHORT).show()
             }
         }
+    }
 
-        item {
-            SectionTitle("Duo's")
-            DuoManagerSection(
-                duos = duos,
-                players = players,
-                onAdd = { a, b ->
-                    vm.addDuo(a, b) { result ->
-                        if (result is nl.tartaruzz.teamcreatorr.data.Repository.DuoResult.Error) {
-                            Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
+    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            val json = runCatching {
+                context.contentResolver.openInputStream(uri)?.use { it.readBytes().toString(Charsets.UTF_8) }
+            }.getOrNull()
+            val parsed = json?.let { Backup.parse(it) }
+            if (parsed == null) {
+                Toast.makeText(context, context.getString(R.string.import_invalid), Toast.LENGTH_SHORT).show()
+            } else {
+                importPreview = ImportPreview(json!!, parsed.players.size, parsed.matches.size, parsed.duos.size)
+            }
+        }
+    }
+
+    Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+        AppHeader(stringResource(R.string.settings_title))
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            item {
+                SectionTitle(stringResource(R.string.settings_language))
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(stringResource(R.string.settings_language_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf(
+                                "nl" to R.string.lang_dutch,
+                                "en" to R.string.lang_english,
+                                "tr" to R.string.lang_turkish
+                            ).forEach { (code, labelRes) ->
+                                FilterChip(
+                                    selected = LanguagePrefs.get(context) == code,
+                                    onClick = {
+                                        LanguagePrefs.set(context, code)
+                                        (context as? Activity)?.recreate()
+                                    },
+                                    label = { Text(stringResource(labelRes)) }
+                                )
+                            }
                         }
                     }
-                },
-                onRemove = { vm.removeDuo(it) }
-            )
-        }
-
-        item {
-            SectionTitle("Gegevens")
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(
-                    onClick = {
-                        val csv = buildCsv(ranking, matches, settings)
-                        shareText(context, csv)
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Filled.Share, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.size(6.dp))
-                    Text("Exporteren (CSV)")
-                }
-                OutlinedButton(onClick = onOpenPlayers, modifier = Modifier.fillMaxWidth()) {
-                    Text("Spelers beheren")
                 }
             }
-        }
 
-        item {
-            SectionTitle("Over")
-            Text(
-                "TeamCreatorr v1.1.0\nZaalvoetbal Teams & Ranking.\nAlle gegevens worden lokaal op dit apparaat opgeslagen.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            item {
+                SectionTitle(stringResource(R.string.settings_points))
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            PickerWithLabel(stringResource(R.string.settings_attendance), att, { att = it }, Modifier.weight(1f))
+                            PickerWithLabel(stringResource(R.string.settings_win), win, { win = it }, Modifier.weight(1f))
+                        }
+                        PickerWithLabel(stringResource(R.string.settings_draw), draw, { draw = it }, Modifier.fillMaxWidth())
+                        Text(stringResource(R.string.settings_points_recalc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Button(onClick = { showConfirm = true }, modifier = Modifier.fillMaxWidth()) {
+                            Text(stringResource(R.string.settings_points_update))
+                        }
+                    }
+                }
+            }
+
+            item {
+                SectionTitle(stringResource(R.string.settings_data))
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = { exportLauncher.launch("teamcreatorr-backup.json") }, modifier = Modifier.fillMaxWidth()) {
+                            Icon(Icons.Filled.Share, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.size(6.dp))
+                            Text(stringResource(R.string.settings_export))
+                        }
+                        OutlinedButton(onClick = { importLauncher.launch(arrayOf("application/json", "text/plain")) }, modifier = Modifier.fillMaxWidth()) {
+                            Text(stringResource(R.string.settings_import))
+                        }
+                    }
+                }
+            }
+
+            item {
+                SectionTitle(stringResource(R.string.settings_donate_title))
+                Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
+                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(stringResource(R.string.settings_donate_text), style = MaterialTheme.typography.bodyMedium)
+                        Button(onClick = { openKofi(context) }, modifier = Modifier.fillMaxWidth()) {
+                            Text("☕")
+                            Spacer(Modifier.size(6.dp))
+                            Text(stringResource(R.string.settings_donate_button), fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+
+            item {
+                SectionTitle(stringResource(R.string.settings_reset))
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(stringResource(R.string.settings_reset_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        OutlinedButton(onClick = { resetKind = ResetKind.ALL }, modifier = Modifier.fillMaxWidth()) {
+                            Text(stringResource(R.string.settings_reset_all), color = MaterialTheme.colorScheme.error)
+                        }
+                        OutlinedButton(onClick = { resetKind = ResetKind.MATCHES }, modifier = Modifier.fillMaxWidth()) {
+                            Text(stringResource(R.string.settings_reset_matches))
+                        }
+                        OutlinedButton(onClick = { resetKind = ResetKind.PLAYERS }, modifier = Modifier.fillMaxWidth()) {
+                            Text(stringResource(R.string.settings_reset_players))
+                        }
+                        OutlinedButton(onClick = { resetKind = ResetKind.RANKING }, modifier = Modifier.fillMaxWidth()) {
+                            Text(stringResource(R.string.settings_reset_ranking))
+                        }
+                    }
+                }
+            }
+
+            item {
+                SectionTitle(stringResource(R.string.settings_about))
+                Text(stringResource(R.string.settings_about_text), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+
         }
     }
 
     if (showConfirm) {
         AlertDialog(
             onDismissRequest = { showConfirm = false },
-            title = { Text("Puntentelling toepassen?") },
+            title = { Text(stringResource(R.string.settings_apply_title)) },
+            text = { Text(stringResource(R.string.settings_apply_msg, att, win, draw)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    vm.updateSettings(att, win, draw)
+                    showConfirm = false
+                    Toast.makeText(context, context.getString(R.string.settings_points_update), Toast.LENGTH_SHORT).show()
+                }) { Text(stringResource(R.string.settings_apply)) }
+            },
+            dismissButton = { TextButton(onClick = { showConfirm = false }) { Text(stringResource(R.string.cancel)) } }
+        )
+    }
+
+    resetKind?.let { kind ->
+        val msgRes = when (kind) {
+            ResetKind.ALL -> R.string.reset_confirm_all
+            ResetKind.MATCHES -> R.string.reset_confirm_matches
+            ResetKind.PLAYERS -> R.string.reset_confirm_players
+            ResetKind.RANKING -> R.string.reset_confirm_ranking
+        }
+        AlertDialog(
+            onDismissRequest = { resetKind = null },
+            title = { Text(stringResource(R.string.reset_confirm_title)) },
+            text = { Text(stringResource(msgRes)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    val done = { Toast.makeText(context, context.getString(R.string.reset_done), Toast.LENGTH_SHORT).show() }
+                    when (kind) {
+                        ResetKind.ALL -> vm.resetAll(done)
+                        ResetKind.MATCHES -> vm.resetMatches(done)
+                        ResetKind.PLAYERS -> vm.resetPlayers(done)
+                        ResetKind.RANKING -> vm.resetRanking(done)
+                    }
+                    resetKind = null
+                }) { Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = { TextButton(onClick = { resetKind = null }) { Text(stringResource(R.string.cancel)) } }
+        )
+    }
+
+    importPreview?.let { p ->
+        AlertDialog(
+            onDismissRequest = { importPreview = null },
+            title = { Text(stringResource(R.string.import_confirm_title)) },
             text = {
-                Text(
-                    "De nieuwe puntentelling (aanwezigheid: ${attText.toIntOrNull() ?: 0}, " +
-                        "winst: ${winText.toIntOrNull() ?: 0}, gelijkspel: ${drawText.toIntOrNull() ?: 0}) " +
-                        "wordt toegepast op alle spelers en alle wedstrijden."
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(R.string.import_preview, p.players, p.matches, p.duos))
+                    Text(stringResource(R.string.import_confirm_msg))
+                }
             },
             confirmButton = {
                 TextButton(onClick = {
-                    vm.updateSettings(
-                        attText.toIntOrNull() ?: 0,
-                        winText.toIntOrNull() ?: 0,
-                        drawText.toIntOrNull() ?: 0
-                    )
-                    showConfirm = false
-                    Toast.makeText(context, "Puntentelling bijgewerkt", Toast.LENGTH_SHORT).show()
-                }) { Text("Toepassen") }
+                    vm.importBackup(p.json, replace = true) { result ->
+                        Toast.makeText(context, context.getString(if (result is Repository.ImportResult.Success) R.string.import_success else R.string.import_failed), Toast.LENGTH_SHORT).show()
+                    }
+                    importPreview = null
+                }) { Text(stringResource(R.string.import_mode_replace)) }
             },
             dismissButton = {
-                TextButton(onClick = { showConfirm = false }) { Text("Annuleren") }
+                TextButton(onClick = {
+                    vm.importBackup(p.json, replace = false) { result ->
+                        Toast.makeText(context, context.getString(if (result is Repository.ImportResult.Success) R.string.import_success else R.string.import_failed), Toast.LENGTH_SHORT).show()
+                    }
+                    importPreview = null
+                }) { Text(stringResource(R.string.import_mode_merge)) }
             }
         )
     }
 }
 
-private fun buildCsv(
-    ranking: List<PlayerStats>,
-    matches: List<MatchDetail>,
-    settings: PointSettings
-): String {
-    val sb = StringBuilder()
-    sb.appendLine("TeamCreatorr export")
-    sb.appendLine()
-    sb.appendLine("PUNTENTELLING")
-    sb.appendLine("Aanwezigheid;Winst;Gelijkspel")
-    sb.appendLine("${settings.attendancePoints};${settings.winPoints};${settings.drawPoints}")
-    sb.appendLine()
-    sb.appendLine("RANKING")
-    sb.appendLine("Positie;Naam;Deelnames;Winst;Verlies;Gelijk;Aanwezigheid;Winst;Gelijkspel;Handmatig;Totaal")
-    ranking.forEach {
-        sb.appendLine(
-            "${it.rank};${it.name};${it.played};${it.wins};${it.losses};${it.draws};" +
-                "${it.attendancePoints};${it.winPoints};${it.drawPoints};${it.manualPoints};${it.totalPoints}"
-        )
+@Composable
+private fun PickerWithLabel(label: String, value: Int, onValueChange: (Int) -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+        NumberPicker(value = value, onValueChange = onValueChange, range = 0..10, modifier = Modifier.fillMaxWidth())
     }
-    sb.appendLine()
-    sb.appendLine("WEDSTRIJDEN")
-    sb.appendLine("Datum;Status;Team A;Team B;Score A;Score B")
-    matches.forEach {
-        sb.appendLine(
-            "${Formatters.formatDate(it.date)};${statusName(it.status)};" +
-                "${it.teamA.joinToString(", ") { p -> p.name }};" +
-                "${it.teamB.joinToString(", ") { p -> p.name }};${it.scoreA ?: ""};${it.scoreB ?: ""}"
-        )
-    }
-    return sb.toString()
 }
 
-private fun statusName(status: MatchStatus): String = when (status) {
-    MatchStatus.CONFIRMED -> "Nog te spelen"
-    MatchStatus.PLAYED -> "Gespeeld"
-    MatchStatus.FINISHED -> "Afgerond"
+private fun openKofi(context: android.content.Context) {
+    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://ko-fi.com/tartaruzz")))
 }
-
-private fun shareText(context: android.content.Context, text: String) {
-    val intent = Intent(Intent.ACTION_SEND).apply {
-        type = "text/plain"
-        putExtra(Intent.EXTRA_SUBJECT, "TeamCreatorr export")
-        putExtra(Intent.EXTRA_TEXT, text)
-    }
-    context.startActivity(Intent.createChooser(intent, "Exporteren"))
-}
-
-

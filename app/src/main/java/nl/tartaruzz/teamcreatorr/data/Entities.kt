@@ -19,7 +19,6 @@ data class PlayerEntity(
 data class MatchEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val date: Long,
-    val note: String? = null,
     val teamSize: Int,
     val scoreA: Int? = null,
     val scoreB: Int? = null,
