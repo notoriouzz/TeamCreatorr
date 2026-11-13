@@ -181,7 +181,7 @@
     <string name="settings_donate_text">Bevalt de app? Trakteer de ontwikkelaar op een koffie! ☕ Dan blijf ik met plezier nieuwe functies bouwen.</string>
     <string name="settings_donate_button">Steun via Ko-fi</string>
     <string name="settings_about">Over</string>
-    <string name="settings_about_text">TeamCreatorr v1.3.0\nTeams &amp; Ranking.\nAlle gegevens worden lokaal op dit apparaat opgeslagen.</string>
+    <string name="settings_about_text">TeamCreatorr v1.3.1\nTeams &amp; Ranking.\nAlle gegevens worden lokaal op dit apparaat opgeslagen.</string>
     <string name="settings_reset">Reset</string>
     <string name="settings_reset_desc">Verwijder gegevens uit de app.</string>
     <string name="settings_reset_all">Alles resetten</string>

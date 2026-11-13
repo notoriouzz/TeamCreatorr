@@ -4,6 +4,11 @@ Alle noemenswaardige wijzigingen aan TeamCreatorr worden hier bijgehouden.
 
 Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1.0/).
 
+## [1.3.1] - 2026-11-13
+
+### Opgelost
+- Cijferkiezer puntentelling: het cijfer in het grijze middengebied is nu altijd automatisch de geselecteerde en opgeslagen waarde (initial positionering, scrollkoppeling en snap na scrollen).
+
 ## [1.3.0] - 2026-11-13
 
 ### Toegevoegd
