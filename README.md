@@ -8,6 +8,14 @@ op basis van aanwezigheid en overwinningen.
 Alle gegevens worden **lokaal** op het apparaat opgeslagen. De app werkt volledig
 zonder internetverbinding.
 
+## Over deze app
+
+- **Meertalig**: Nederlands (standaard), Engels en Turks.
+- **Volledig lokaal**: geen account of internetverbinding nodig.
+- **Back-up & herstel**: exporteer en importeer al je gegevens als JSON-bestand.
+- **Resetopties**: reset alles, wedstrijdgeschiedenis, spelers of ranking.
+- **Donatie**: steun de ontwikkeling via Ko-fi (https://ko-fi.com/tartaruzz).
+
 ---
 
 ## Nieuwe functies (v1.2.0)
