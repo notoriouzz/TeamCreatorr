@@ -25,7 +25,6 @@ import nl.tartaruzz.teamcreatorr.ui.theme.Silver
 import nl.tartaruzz.teamcreatorr.ui.viewmodel.RankingViewModel
 import nl.tartaruzz.teamcreatorr.ui.viewmodel.appViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RankingScreen(onOpenPlayer: (Long) -> Unit) {
     val vm: RankingViewModel = appViewModel()
@@ -74,6 +73,7 @@ fun RankingScreen(onOpenPlayer: (Long) -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RankingRow(stats: PlayerStats, onClick: () -> Unit) {
     val medal = when (stats.rank) {
@@ -92,18 +92,35 @@ private fun RankingRow(stats: PlayerStats, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Box(
-                Modifier
-                    .size(38.dp)
-                    .clip(CircleShape)
-                    .background(medal),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "${stats.rank}",
-                    fontWeight = FontWeight.Bold,
-                    color = if (stats.rank <= 3) Color(0xFF1A1A1A) else MaterialTheme.colorScheme.onSurface
-                )
+            if (stats.rank <= 3) {
+                Box(
+                    Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(medal),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Filled.EmojiEvents,
+                        contentDescription = "Positie ${stats.rank}",
+                        tint = Color(0xFF3A2A00),
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+            } else {
+                Box(
+                    Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(medal),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "${stats.rank}",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -121,13 +138,20 @@ private fun RankingRow(stats: PlayerStats, onClick: () -> Unit) {
                         )
                     }
                 }
+                if (!stats.nickname.isNullOrBlank()) {
+                    Text(
+                        "\"${stats.nickname}\"",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 Text(
                     "Deelnames: ${stats.played}  ·  W ${stats.wins} · V ${stats.losses} · G ${stats.draws}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    "Aanwezigheid: ${stats.attendancePoints} pt  ·  Winst: ${stats.winPoints} pt",
+                    "Aanw: ${stats.attendancePoints} · Winst: ${stats.winPoints} · Gelijkspel: ${stats.drawPoints} · Handmatig: ${stats.manualPoints}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

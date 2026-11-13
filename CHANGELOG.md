@@ -4,7 +4,37 @@ Alle noemenswaardige wijzigingen aan TeamCreatorr worden hier bijgehouden.
 
 Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1.0/).
 
+## [1.1.0] - 2026-11-13
+
+### Toegevoegd
+- Optionele **nickname** per speler (zichtbaar in de ranking en bij het delen).
+- **Trofee-iconen** (goud/zilver/brons) voor de top 3 in de ranking.
+- **Teamindeling delen** via de Android-deelsheet (o.a. WhatsApp).
+- **Iedereen selecteren / alles wissen** bij het aanmaken van een wedstrijd.
+- **Wedstrijdstatussen**: Teamindeling bevestigd → Gespeeld → Afgerond.
+  Nog niet gespeelde wedstrijden leveren geen punten op.
+- **Gelijkspelpunten** instelbaar (standaard 1 punt).
+- **Handmatige puntenmutaties** per speler (toevoegen/aftrekken, aanpassen,
+  verwijderen) met volledige puntenopbouw in het profiel.
+- **Spelersrating (1-99)** op basis van gemiddelde wedstrijdpunten.
+- **Ranking-gebaseerde teamindeling** (optioneel, houdt rekening met duo's).
+- **Profielfoto's** via de Android Photo Picker, automatisch geoptimaliseerd.
+- **Centraal duobeheer** in Instellingen; per wedstrijd kunnen vaste duo's
+  worden in-/uitgeschakeld en tijdelijke duo's worden toegevoegd.
+
+### Gewijzigd
+- Punten worden alleen nog toegekend aan **afgeronde** wedstrijden.
+- De onderste navigatiebalk blijft op alle schermen zichtbaar.
+- Duo's worden alleen nog centraal beheerd (Instellingen).
+- Ranking toont nu ook gelijkspel- en handmatige punten.
+
+### Opgelost
+- Home/dashboard was soms niet meer bereikbaar (navigatiebalk is nu altijd
+  beschikbaar en de backstack wordt correct afgehandeld).
+- Plus-knop viel over de spelerslijst heen (extra onderruimte toegevoegd).
+
 ## [1.0.0] - 2026-11-13
+
 
 ### Toegevoegd
 - Spelersbeheer: toevoegen (enkel of bulk), hernoemen, verwijderen en

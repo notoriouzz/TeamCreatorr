@@ -7,12 +7,17 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import nl.tartaruzz.teamcreatorr.domain.DuoWithNames
 import nl.tartaruzz.teamcreatorr.domain.MatchDetail
+import nl.tartaruzz.teamcreatorr.domain.MatchStatus
+import nl.tartaruzz.teamcreatorr.domain.ManualAdjustment
+import nl.tartaruzz.teamcreatorr.domain.PlayerHistoryItem
 import nl.tartaruzz.teamcreatorr.domain.PlayerInput
 import nl.tartaruzz.teamcreatorr.domain.PlayerProfileUiData
 import nl.tartaruzz.teamcreatorr.domain.PlayerRef
 import nl.tartaruzz.teamcreatorr.domain.PlayerStats
+import nl.tartaruzz.teamcreatorr.domain.PointHistoryEntry
 import nl.tartaruzz.teamcreatorr.domain.PointSettings
 import nl.tartaruzz.teamcreatorr.domain.RankingCalculator
+import nl.tartaruzz.teamcreatorr.domain.RatingCalculator
 
 class Repository(private val db: TeamCreatorrDatabase) {
 
@@ -24,27 +29,29 @@ class Repository(private val db: TeamCreatorrDatabase) {
 
     fun observePlayer(id: Long): Flow<PlayerEntity?> = db.playerDao().observeById(id)
 
-    suspend fun addPlayer(name: String): Long =
-        db.playerDao().insert(PlayerEntity(name = name.trim()))
+    suspend fun addPlayer(name: String, nickname: String?): Long =
+        db.playerDao().insert(
+            PlayerEntity(name = name.trim(), nickname = nickname?.trim()?.ifEmpty { null })
+        )
 
     suspend fun addPlayers(names: List<String>) {
         val clean = names.map { it.trim() }.filter { it.isNotEmpty() }
         clean.forEach { db.playerDao().insert(PlayerEntity(name = it)) }
     }
 
-    suspend fun renamePlayer(id: Long, name: String) {
-        db.playerDao().updateName(id, name.trim())
+    suspend fun updatePlayer(id: Long, name: String, nickname: String?) {
+        db.playerDao().updateNameAndNickname(id, name.trim(), nickname?.trim()?.ifEmpty { null })
+    }
+
+    suspend fun updatePlayerPhoto(id: Long, photoFileName: String?) {
+        db.playerDao().updatePhotoFileName(id, photoFileName)
     }
 
     suspend fun setPlayerActive(id: Long, active: Boolean) {
         db.playerDao().updateActive(id, active)
     }
 
-    /**
-     * Hard-deletes a player only when they have no match history.
-     * Otherwise the player is deactivated so history stays intact.
-     * Returns true when the player was actually deleted.
-     */
+    /** Hard-deletes only when there is no history; otherwise deactivates. */
     suspend fun deletePlayer(id: Long): Boolean {
         val hasHistory = db.matchPlayerDao().countForPlayer(id) > 0
         return if (hasHistory) {
@@ -56,7 +63,7 @@ class Repository(private val db: TeamCreatorrDatabase) {
         }
     }
 
-    // ---- Duos ------------------------------------------------------------
+    // ---- Duos (global, managed in Settings) --------------------------------
 
     fun observeDuos(): Flow<List<DuoWithNames>> =
         combine(db.duoDao().observeAll(), db.playerDao().observeAll()) { duos, players ->
@@ -66,8 +73,8 @@ class Repository(private val db: TeamCreatorrDatabase) {
                 val b = byId[duo.playerBId] ?: return@mapNotNull null
                 DuoWithNames(
                     id = duo.id,
-                    playerA = PlayerRef(a.id, a.name),
-                    playerB = PlayerRef(b.id, b.name)
+                    playerA = PlayerRef(a.id, a.name, a.nickname),
+                    playerB = PlayerRef(b.id, b.name, b.nickname)
                 )
             }
         }
@@ -104,22 +111,31 @@ class Repository(private val db: TeamCreatorrDatabase) {
 
     fun observeSettings(): Flow<PointSettings> =
         db.settingsDao().observe().map { settings -> settings ?: SettingsEntity() }
-            .map { PointSettings(it.attendancePoints, it.winPoints) }
+            .map { PointSettings(it.attendancePoints, it.winPoints, it.drawPoints) }
 
     suspend fun getSettings(): PointSettings {
         val s = db.settingsDao().get() ?: SettingsEntity().also { db.settingsDao().insert(it) }
-        return PointSettings(s.attendancePoints, s.winPoints)
+        return PointSettings(s.attendancePoints, s.winPoints, s.drawPoints)
     }
 
-    suspend fun updateSettings(attendancePoints: Int, winPoints: Int) {
+    suspend fun updateSettings(attendancePoints: Int, winPoints: Int, drawPoints: Int) {
         val current = db.settingsDao().get()
         if (current == null) {
             db.settingsDao().insert(
-                SettingsEntity(id = 1, attendancePoints = attendancePoints, winPoints = winPoints)
+                SettingsEntity(
+                    id = 1,
+                    attendancePoints = attendancePoints,
+                    winPoints = winPoints,
+                    drawPoints = drawPoints
+                )
             )
         } else {
             db.settingsDao().update(
-                current.copy(attendancePoints = attendancePoints, winPoints = winPoints)
+                current.copy(
+                    attendancePoints = attendancePoints,
+                    winPoints = winPoints,
+                    drawPoints = drawPoints
+                )
             )
         }
     }
@@ -134,23 +150,32 @@ class Repository(private val db: TeamCreatorrDatabase) {
             db.matchPlayerDao().observeAllRows(),
             db.playerDao().observeAll()
         ) { matches, rows, players ->
-            val names = players.associate { it.id to it.name }
-            matches.map { m -> toDetail(m, rows, names) }
+            val byId = players.associate { it.id to it }
+            matches.map { m -> toDetail(m, rows, byId) }
         }
 
     fun observeMatchDetail(id: Long): Flow<MatchDetail?> =
         observeMatchDetails().map { list -> list.firstOrNull { it.id == id } }
 
+    fun observeMatchDuos(id: Long): Flow<List<Pair<Long, Long>>> =
+        db.matchDuoDao().observeForMatch(id).map { rows ->
+            rows.map { it.playerAId to it.playerBId }
+        }
+
     private fun toDetail(
         match: MatchEntity,
         rows: List<MatchPlayerEntity>,
-        names: Map<Long, String>
+        players: Map<Long, PlayerEntity>
     ): MatchDetail {
+        fun ref(playerId: Long, team: String): PlayerRef =
+            players[playerId]?.let { PlayerRef(it.id, it.name, it.nickname) }
+                ?: PlayerRef(playerId, "Speler")
+
         val teamA = rows.filter { it.matchId == match.id && it.team == "A" }
-            .map { PlayerRef(it.playerId, names[it.playerId] ?: "Speler") }
+            .map { ref(it.playerId, "A") }
             .sortedBy { it.name.lowercase() }
         val teamB = rows.filter { it.matchId == match.id && it.team == "B" }
-            .map { PlayerRef(it.playerId, names[it.playerId] ?: "Speler") }
+            .map { ref(it.playerId, "B") }
             .sortedBy { it.name.lowercase() }
         return MatchDetail(
             id = match.id,
@@ -160,7 +185,8 @@ class Repository(private val db: TeamCreatorrDatabase) {
             scoreA = match.scoreA,
             scoreB = match.scoreB,
             teamA = teamA,
-            teamB = teamB
+            teamB = teamB,
+            status = MatchStatus.fromCode(match.status)
         )
     }
 
@@ -169,15 +195,23 @@ class Repository(private val db: TeamCreatorrDatabase) {
         note: String?,
         teamSize: Int,
         teamA: List<Long>,
-        teamB: List<Long>
+        teamB: List<Long>,
+        duos: List<Pair<Long, Long>>
     ): Long = db.withTransaction {
         val matchId = db.matchDao().insert(
-            MatchEntity(date = date, note = note?.trim()?.ifEmpty { null }, teamSize = teamSize)
+            MatchEntity(date = date, note = note?.trim()?.ifEmpty { null }, teamSize = teamSize, status = 0)
         )
         val entries = teamA.map { MatchPlayerEntity(matchId, it, "A") } +
             teamB.map { MatchPlayerEntity(matchId, it, "B") }
         db.matchPlayerDao().insertAll(entries)
+        if (duos.isNotEmpty()) {
+            db.matchDuoDao().insertAll(duos.map { MatchDuoEntity(matchId, it.first, it.second) })
+        }
         matchId
+    }
+
+    suspend fun markMatchPlayed(id: Long) {
+        db.matchDao().markPlayed(id)
     }
 
     suspend fun updateMatchResult(id: Long, scoreA: Int, scoreB: Int) {
@@ -192,39 +226,107 @@ class Repository(private val db: TeamCreatorrDatabase) {
         db.matchDao().deleteById(id)
     }
 
-    // ---- Ranking ----------------------------------------------------------
+    // ---- Ranking & ratings -------------------------------------------------
 
     fun observeRanking(): Flow<List<PlayerStats>> =
         combine(
             db.playerDao().observeAll(),
             db.matchPlayerDao().observeParticipations(),
+            db.pointAdjustmentDao().observeAllForRanking(),
             db.settingsDao().observe()
-        ) { players, participations, settings ->
+        ) { players, participations, pointRows, settings ->
             val s = settings ?: SettingsEntity()
+            val manualMap = pointRows.groupBy { it.playerId }
+                .mapValues { (_, v) -> v.sumOf { it.points } }
             RankingCalculator.compute(
-                players.map { PlayerInput(it.id, it.name, it.active) },
+                players.map { PlayerInput(it.id, it.name, it.nickname, it.active) },
                 participations,
-                PointSettings(s.attendancePoints, s.winPoints)
+                manualMap,
+                PointSettings(s.attendancePoints, s.winPoints, s.drawPoints)
             )
         }
 
-    // ---- Player profile ---------------------------------------------------
+    fun observeRatings(): Flow<Map<Long, Int>> =
+        combine(observeRanking(), observeSettings()) { ranking, settings ->
+            ranking.associate {
+                it.playerId to RatingCalculator.rating(it.played, it.autoPoints, settings)
+            }
+        }
+
+    // ---- Point adjustments -------------------------------------------------
+
+    fun observeAdjustments(playerId: Long): Flow<List<ManualAdjustment>> =
+        db.pointAdjustmentDao().observeForPlayer(playerId)
+
+    suspend fun addAdjustment(playerId: Long, points: Int, description: String): Long =
+        db.pointAdjustmentDao().insert(
+            PointAdjustmentEntity(playerId = playerId, points = points, description = description.trim())
+        )
+
+    suspend fun updateAdjustment(id: Long, points: Int, description: String) {
+        val existing = db.pointAdjustmentDao().getById(id) ?: return
+        db.pointAdjustmentDao().update(existing.copy(points = points, description = description.trim()))
+    }
+
+    suspend fun deleteAdjustment(id: Long) {
+        db.pointAdjustmentDao().deleteById(id)
+    }
+
+    // ---- Player profile ----------------------------------------------------
+
+    private data class ProfileParts(
+        val player: PlayerEntity?,
+        val ranking: List<PlayerStats>,
+        val ratings: Map<Long, Int>,
+        val history: List<PlayerHistoryItem>,
+        val adjustments: List<ManualAdjustment>
+    )
 
     fun observePlayerProfile(playerId: Long): Flow<PlayerProfileUiData?> =
         combine(
             db.playerDao().observeById(playerId),
             observeRanking(),
-            db.matchPlayerDao().observeHistoryForPlayer(playerId)
-        ) { player, ranking, history ->
-            player?.let {
+            observeRatings(),
+            db.matchPlayerDao().observeHistoryForPlayer(playerId),
+            db.pointAdjustmentDao().observeForPlayer(playerId)
+        ) { player, ranking, ratings, history, adjustments ->
+            ProfileParts(player, ranking, ratings, history, adjustments)
+        }.combine(observeSettings()) { parts, settings ->
+            parts.player?.let {
                 PlayerProfileUiData(
                     playerId = it.id,
                     name = it.name,
+                    nickname = it.nickname,
                     active = it.active,
-                    stats = ranking.firstOrNull { s -> s.playerId == it.id },
-                    history = history
+                    photoFileName = it.photoFileName,
+                    rating = parts.ratings[it.id] ?: RatingCalculator.NEUTRAL_RATING,
+                    stats = parts.ranking.firstOrNull { s -> s.playerId == it.id },
+                    history = parts.history,
+                    pointHistory = buildPointHistory(parts.history, parts.adjustments, settings),
+                    manualAdjustments = parts.adjustments
                 )
             }
         }
-}
 
+    private fun buildPointHistory(
+        history: List<PlayerHistoryItem>,
+        adjustments: List<ManualAdjustment>,
+        settings: PointSettings
+    ): List<PointHistoryEntry> {
+        val entries = mutableListOf<PointHistoryEntry>()
+        for (h in history) {
+            if (h.scoreA == null || h.scoreB == null) continue
+            entries.add(PointHistoryEntry(h.date, "Aanwezigheid", settings.attendancePoints, false))
+            val won = (h.team == "A" && h.scoreA > h.scoreB) || (h.team == "B" && h.scoreB > h.scoreA)
+            when {
+                h.scoreA == h.scoreB -> entries.add(PointHistoryEntry(h.date, "Gelijkspel", settings.drawPoints, false))
+                won -> entries.add(PointHistoryEntry(h.date, "Winst", settings.winPoints, false))
+                else -> Unit
+            }
+        }
+        for (a in adjustments) {
+            entries.add(PointHistoryEntry(a.createdAt, a.description, a.points, true, a.id))
+        }
+        return entries.sortedByDescending { it.date }
+    }
+}

@@ -9,12 +9,14 @@ import kotlinx.coroutines.launch
 import nl.tartaruzz.teamcreatorr.data.PlayerEntity
 import nl.tartaruzz.teamcreatorr.data.Repository
 import nl.tartaruzz.teamcreatorr.domain.DuoWithNames
+import nl.tartaruzz.teamcreatorr.domain.MatchDetail
+import nl.tartaruzz.teamcreatorr.domain.PlayerStats
 import nl.tartaruzz.teamcreatorr.domain.PointSettings
 
 class SettingsViewModel(private val repo: Repository) : ViewModel() {
 
     val settings: StateFlow<PointSettings> = repo.observeSettings()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), PointSettings(1, 2))
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), PointSettings(1, 2, 1))
 
     val duos: StateFlow<List<DuoWithNames>> = repo.observeDuos()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
@@ -22,20 +24,18 @@ class SettingsViewModel(private val repo: Repository) : ViewModel() {
     val players: StateFlow<List<PlayerEntity>> = repo.observeActivePlayers()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val ranking: StateFlow<List<nl.tartaruzz.teamcreatorr.domain.PlayerStats>> = repo.observeRanking()
+    val ranking: StateFlow<List<PlayerStats>> = repo.observeRanking()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val matches: StateFlow<List<nl.tartaruzz.teamcreatorr.domain.MatchDetail>> = repo.observeMatchDetails()
+    val matches: StateFlow<List<MatchDetail>> = repo.observeMatchDetails()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    fun updateSettings(attendancePoints: Int, winPoints: Int) {
-        viewModelScope.launch { repo.updateSettings(attendancePoints, winPoints) }
+    fun updateSettings(attendancePoints: Int, winPoints: Int, drawPoints: Int) {
+        viewModelScope.launch { repo.updateSettings(attendancePoints, winPoints, drawPoints) }
     }
 
     fun addDuo(playerAId: Long, playerBId: Long, onResult: (Repository.DuoResult) -> Unit) {
-        viewModelScope.launch {
-            onResult(repo.addDuo(playerAId, playerBId))
-        }
+        viewModelScope.launch { onResult(repo.addDuo(playerAId, playerBId)) }
     }
 
     fun removeDuo(id: Long) {

@@ -63,6 +63,51 @@ kunt invullen.
 - Gebruik de filters **Alle / Gewonnen / Verloren / Gelijk**.
 - Tik op een wedstrijd om alle details te bekijken.
 
+## Nicknames
+
+- Bij het toevoegen/bewerken van een speler kun je een optionele nickname invullen.
+- De nickname verschijnt in de **Ranking** en in het **WhatsApp-deelbericht**.
+
+## Wedstrijdstatus
+
+1. **Teamindeling bevestigd** — teams staan vast, de wedstrijd moet nog gespeeld
+   worden (geen punten).
+2. **Gespeeld** — open de wedstrijd en tik op **Markeer als gespeeld** om de
+   uitslag in te voeren.
+3. **Afgerond** — de uitslag is opgeslagen en de punten zijn verwerkt.
+
+Op het dashboard en in de historie zie je duidelijk welke wedstrijden nog
+gespeeld moeten worden.
+
+## Teamindeling delen
+
+Open een (bevestigde) wedstrijd en tik op **Deel teamindeling**. De tekst wordt
+opgebouwd uit de daadwerkelijke teams en kan via WhatsApp of een andere app
+worden gedeeld.
+
+## Ranking-gebaseerde teamindeling
+
+Zet bij **Nieuwe wedstrijd** de optie **Houd rekening met ranking** aan om de
+teams zo evenwichtig mogelijk te verdelen op basis van spelersratings.
+
+## Handmatige punten
+
+Open een spelerprofiel → **Puntenopbouw** → **Punten toevoegen / aftrekken**.
+Geef een aantal punten (bijv. 5 of -3) en een verplichte omschrijving.
+Handmatige mutaties blijven behouden bij herberekeningen.
+
+## Profielfoto
+
+Open een spelerprofiel → **Foto wijzigen** om een foto uit de galerij te kiezen.
+Gebruik **Verwijderen** om de foto te verwijderen. Foto's worden automatisch
+verkleind en gecomprimeerd.
+
+## Duo's per wedstrijd
+
+Vaste duo's beheer je centraal in **Instellingen → Duo's**. Bij een nieuwe
+wedstrijd kun je met de schakelaar kiezen of de vaste duo's gebruikt worden en
+kun je tijdelijke duo's voor die ene wedstrijd toevoegen.
+
 ## Exporteren
 
 - Ga naar **Instellingen** → **Exporteren (CSV)** om de ranking en wedstrijden

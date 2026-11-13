@@ -16,7 +16,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import nl.tartaruzz.teamcreatorr.domain.MatchDetail
+import nl.tartaruzz.teamcreatorr.domain.MatchStatus
 import nl.tartaruzz.teamcreatorr.ui.components.ResultBadge
+import nl.tartaruzz.teamcreatorr.ui.components.statusLabel
+import nl.tartaruzz.teamcreatorr.ui.components.statusColor
 import nl.tartaruzz.teamcreatorr.ui.theme.TeamAColor
 import nl.tartaruzz.teamcreatorr.ui.theme.TeamBColor
 import nl.tartaruzz.teamcreatorr.ui.viewmodel.HistoryViewModel
@@ -88,22 +91,36 @@ private fun MatchCard(match: MatchDetail, onClick: () -> Unit) {
                 )
             }
             Spacer(Modifier.height(6.dp))
+            if (match.status == MatchStatus.FINISHED) {
+                Text(
+                    "Team A ${match.scoreA} - ${match.scoreB} Team B",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(Modifier.height(4.dp))
+                ResultBadge(match)
+            } else {
+                Text(
+                    "Nog niet gespeeld",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Spacer(Modifier.height(6.dp))
             Text(
-                if (match.hasResult) "Team A ${match.scoreA} - ${match.scoreB} Team B"
-                else "Team A - Team B",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                statusLabel(match.status),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = statusColor(match.status)
             )
-            Spacer(Modifier.height(4.dp))
-            ResultBadge(match)
             Spacer(Modifier.height(8.dp))
             Text(
-                teamLine("Team A", match.teamA, TeamAColor),
+                teamLine("Team A", match.teamA),
                 style = MaterialTheme.typography.bodySmall,
                 color = TeamAColor
             )
             Text(
-                teamLine("Team B", match.teamB, TeamBColor),
+                teamLine("Team B", match.teamB),
                 style = MaterialTheme.typography.bodySmall,
                 color = TeamBColor
             )
@@ -111,7 +128,7 @@ private fun MatchCard(match: MatchDetail, onClick: () -> Unit) {
     }
 }
 
-private fun teamLine(name: String, players: List<nl.tartaruzz.teamcreatorr.domain.PlayerRef>, color: androidx.compose.ui.graphics.Color): String {
+private fun teamLine(name: String, players: List<nl.tartaruzz.teamcreatorr.domain.PlayerRef>): String {
     val names = if (players.isEmpty()) "—" else players.joinToString(", ") { it.name }
     return "$name: $names"
 }

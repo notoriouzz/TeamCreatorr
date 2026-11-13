@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
+import nl.tartaruzz.teamcreatorr.domain.ManualAdjustment
 import nl.tartaruzz.teamcreatorr.domain.Participation
 import nl.tartaruzz.teamcreatorr.domain.PlayerHistoryItem
 
@@ -25,8 +26,11 @@ interface PlayerDao {
     @Update
     suspend fun update(player: PlayerEntity)
 
-    @Query("UPDATE players SET name = :name WHERE id = :id")
-    suspend fun updateName(id: Long, name: String)
+    @Query("UPDATE players SET name = :name, nickname = :nickname WHERE id = :id")
+    suspend fun updateNameAndNickname(id: Long, name: String, nickname: String?)
+
+    @Query("UPDATE players SET photoFileName = :photoFileName WHERE id = :id")
+    suspend fun updatePhotoFileName(id: Long, photoFileName: String?)
 
     @Query("UPDATE players SET active = :active WHERE id = :id")
     suspend fun updateActive(id: Long, active: Boolean)
@@ -46,8 +50,11 @@ interface MatchDao {
     @Insert
     suspend fun insert(match: MatchEntity): Long
 
-    @Query("UPDATE matches SET scoreA = :scoreA, scoreB = :scoreB WHERE id = :id")
+    @Query("UPDATE matches SET scoreA = :scoreA, scoreB = :scoreB, status = 2 WHERE id = :id")
     suspend fun updateScore(id: Long, scoreA: Int, scoreB: Int)
+
+    @Query("UPDATE matches SET status = 1 WHERE id = :id")
+    suspend fun markPlayed(id: Long)
 
     @Query("UPDATE matches SET date = :date, note = :note WHERE id = :id")
     suspend fun updateDetails(id: Long, date: Long, note: String?)
@@ -72,7 +79,7 @@ interface MatchPlayerDao {
 
     @Query(
         "SELECT mp.matchId AS matchId, m.date AS date, mp.team AS team, " +
-            "m.scoreA AS scoreA, m.scoreB AS scoreB, m.note AS note " +
+            "m.scoreA AS scoreA, m.scoreB AS scoreB, m.note AS note, m.status AS status " +
             "FROM match_players mp JOIN matches m ON m.id = mp.matchId " +
             "WHERE mp.playerId = :playerId ORDER BY m.date DESC, m.id DESC"
     )
@@ -99,6 +106,49 @@ interface DuoDao {
     @Query("DELETE FROM duos")
     suspend fun deleteAll()
 }
+
+@Dao
+interface MatchDuoDao {
+    @Insert
+    suspend fun insertAll(duos: List<MatchDuoEntity>)
+
+    @Query("SELECT playerAId, playerBId FROM match_duos WHERE matchId = :matchId")
+    fun observeForMatch(matchId: Long): Flow<List<DuoPair>>
+
+    @Query("DELETE FROM match_duos WHERE matchId = :matchId")
+    suspend fun deleteForMatch(matchId: Long)
+}
+
+data class DuoPair(
+    val playerAId: Long,
+    val playerBId: Long
+)
+
+@Dao
+interface PointAdjustmentDao {
+    @Insert
+    suspend fun insert(adjustment: PointAdjustmentEntity): Long
+
+    @Update
+    suspend fun update(adjustment: PointAdjustmentEntity)
+
+    @Query("DELETE FROM point_adjustments WHERE id = :id")
+    suspend fun deleteById(id: Long)
+
+    @Query("SELECT id, points, description, createdAt FROM point_adjustments WHERE playerId = :playerId ORDER BY createdAt DESC, id DESC")
+    fun observeForPlayer(playerId: Long): Flow<List<ManualAdjustment>>
+
+    @Query("SELECT * FROM point_adjustments WHERE id = :id")
+    suspend fun getById(id: Long): PointAdjustmentEntity?
+
+    @Query("SELECT playerId, points FROM point_adjustments")
+    fun observeAllForRanking(): Flow<List<PlayerPointsRow>>
+}
+
+data class PlayerPointsRow(
+    val playerId: Long,
+    val points: Int
+)
 
 @Dao
 interface SettingsDao {

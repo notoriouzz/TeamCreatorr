@@ -67,7 +67,7 @@ fun PlayerListScreen(
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(padding),
-                contentPadding = PaddingValues(16.dp),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(players, key = { it.id }) { player ->
@@ -84,12 +84,13 @@ fun PlayerListScreen(
     }
 
     if (showAdd) {
-        NameDialog(
+        PlayerDialog(
             title = "Speler toevoegen",
-            initial = "",
+            initialName = "",
+            initialNickname = "",
             onDismiss = { showAdd = false },
-            onConfirm = { name ->
-                vm.add(name)
+            onConfirm = { name, nickname ->
+                vm.add(name, nickname)
                 showAdd = false
             }
         )
@@ -107,12 +108,13 @@ fun PlayerListScreen(
     }
 
     editing?.let { player ->
-        NameDialog(
-            title = "Naam aanpassen",
-            initial = player.name,
+        PlayerDialog(
+            title = "Speler aanpassen",
+            initialName = player.name,
+            initialNickname = player.nickname ?: "",
             onDismiss = { editing = null },
-            onConfirm = { name ->
-                vm.rename(player.id, name)
+            onConfirm = { name, nickname ->
+                vm.update(player.id, name, nickname)
                 editing = null
             }
         )
@@ -197,27 +199,38 @@ private fun PlayerRow(
 }
 
 @Composable
-private fun NameDialog(
+private fun PlayerDialog(
     title: String,
-    initial: String,
+    initialName: String,
+    initialNickname: String,
     onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
+    onConfirm: (String, String?) -> Unit
 ) {
-    var text by remember(initial) { mutableStateOf(initial) }
+    var name by remember(initialName) { mutableStateOf(initialName) }
+    var nickname by remember(initialNickname) { mutableStateOf(initialNickname) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
-            OutlinedTextField(
-                value = text,
-                onValueChange = { text = it },
-                singleLine = true,
-                label = { Text("Naam") },
-                modifier = Modifier.fillMaxWidth()
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    singleLine = true,
+                    label = { Text("Naam") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = nickname,
+                    onValueChange = { nickname = it },
+                    singleLine = true,
+                    label = { Text("Nickname (optioneel)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         },
         confirmButton = {
-            TextButton(enabled = text.isNotBlank(), onClick = { onConfirm(text.trim()) }) {
+            TextButton(enabled = name.isNotBlank(), onClick = { onConfirm(name.trim(), nickname.trim().ifEmpty { null }) }) {
                 Text("Opslaan")
             }
         },

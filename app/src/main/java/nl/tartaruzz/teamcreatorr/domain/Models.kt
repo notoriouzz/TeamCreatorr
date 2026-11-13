@@ -1,5 +1,16 @@
 package nl.tartaruzz.teamcreatorr.domain
 
+/** Lifecycle of a match. */
+enum class MatchStatus(val code: Int) {
+    CONFIRMED(0),   // teams confirmed, not played yet
+    PLAYED(1),      // played, result can now be entered
+    FINISHED(2);    // result saved, points processed
+
+    companion object {
+        fun fromCode(code: Int): MatchStatus = entries.firstOrNull { it.code == code } ?: CONFIRMED
+    }
+}
+
 /** Team assignment for a single match. */
 data class TeamSplit(
     val teamA: List<Long>,
@@ -9,13 +20,15 @@ data class TeamSplit(
 /** Point settings used for ranking calculation. */
 data class PointSettings(
     val attendancePoints: Int,
-    val winPoints: Int
+    val winPoints: Int,
+    val drawPoints: Int
 )
 
 /** Lightweight player input for the ranking calculator. */
 data class PlayerInput(
     val id: Long,
     val name: String,
+    val nickname: String?,
     val active: Boolean
 )
 
@@ -31,6 +44,7 @@ data class Participation(
 data class PlayerStats(
     val playerId: Long,
     val name: String,
+    val nickname: String?,
     val active: Boolean,
     val played: Int,
     val wins: Int,
@@ -38,9 +52,14 @@ data class PlayerStats(
     val draws: Int,
     val attendancePoints: Int,
     val winPoints: Int,
+    val drawPoints: Int,
+    val manualPoints: Int,
     val totalPoints: Int,
     val rank: Int
 ) {
+    /** Automatically earned match points (attendance + win + draw). */
+    val autoPoints: Int get() = attendancePoints + winPoints + drawPoints
+
     /** Number of matches that actually have a result. */
     val decided: Int get() = wins + losses + draws
 
@@ -49,10 +68,11 @@ data class PlayerStats(
         get() = if (decided == 0) 0 else Math.round(wins * 100.0 / decided).toInt()
 }
 
-/** References a player by stable id + current name. */
+/** References a player by stable id + current name (+ optional nickname). */
 data class PlayerRef(
     val id: Long,
-    val name: String
+    val name: String,
+    val nickname: String? = null
 )
 
 /** Full detail of a match, including both teams with player names. */
@@ -64,9 +84,12 @@ data class MatchDetail(
     val scoreA: Int?,
     val scoreB: Int?,
     val teamA: List<PlayerRef>,
-    val teamB: List<PlayerRef>
+    val teamB: List<PlayerRef>,
+    val status: MatchStatus
 ) {
     val hasResult: Boolean get() = scoreA != null && scoreB != null
+
+    val isFinished: Boolean get() = status == MatchStatus.FINISHED
 
     val winnerTeam: String?
         get() = when {
@@ -93,14 +116,41 @@ data class PlayerHistoryItem(
     val team: String,
     val scoreA: Int?,
     val scoreB: Int?,
-    val note: String?
+    val note: String?,
+    val status: Int
+)
+
+/** A single entry in the points overview (auto or manual). */
+data class PointHistoryEntry(
+    val date: Long,
+    val description: String,
+    val points: Int,
+    val isManual: Boolean,
+    val adjustmentId: Long? = null
+)
+
+/** A manual point adjustment for a player. */
+data class ManualAdjustment(
+    val id: Long,
+    val points: Int,
+    val description: String,
+    val createdAt: Long
 )
 
 /** Full player profile data. */
 data class PlayerProfileUiData(
     val playerId: Long,
     val name: String,
+    val nickname: String?,
     val active: Boolean,
+    val photoFileName: String?,
+    val rating: Int,
     val stats: PlayerStats?,
-    val history: List<PlayerHistoryItem>
+    val history: List<PlayerHistoryItem>,
+    val pointHistory: List<PointHistoryEntry>,
+    val manualAdjustments: List<ManualAdjustment>
 )
+
+/** Helper to render a name with its optional nickname. */
+fun displayNameWithNickname(name: String, nickname: String?): String =
+    if (nickname.isNullOrBlank()) name else "$name \"$nickname\""

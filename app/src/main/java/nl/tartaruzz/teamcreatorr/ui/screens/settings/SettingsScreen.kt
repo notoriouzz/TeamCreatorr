@@ -4,7 +4,6 @@ import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
@@ -16,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import nl.tartaruzz.teamcreatorr.domain.MatchDetail
+import nl.tartaruzz.teamcreatorr.domain.MatchStatus
 import nl.tartaruzz.teamcreatorr.domain.PlayerStats
 import nl.tartaruzz.teamcreatorr.domain.PointSettings
 import nl.tartaruzz.teamcreatorr.ui.components.DuoManagerSection
@@ -36,6 +36,7 @@ fun SettingsScreen(onOpenPlayers: () -> Unit) {
 
     var attText by remember { mutableStateOf("") }
     var winText by remember { mutableStateOf("") }
+    var drawText by remember { mutableStateOf("") }
     var initialized by remember { mutableStateOf(false) }
     var showConfirm by remember { mutableStateOf(false) }
 
@@ -43,6 +44,7 @@ fun SettingsScreen(onOpenPlayers: () -> Unit) {
         if (!initialized) {
             attText = settings.attendancePoints.toString()
             winText = settings.winPoints.toString()
+            drawText = settings.drawPoints.toString()
             initialized = true
         }
     }
@@ -64,20 +66,27 @@ fun SettingsScreen(onOpenPlayers: () -> Unit) {
                         OutlinedTextField(
                             value = attText,
                             onValueChange = { attText = it },
-                            label = { Text("Punten aanwezigheid") },
+                            label = { Text("Aanwezigheid") },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.weight(1f)
                         )
                         OutlinedTextField(
                             value = winText,
                             onValueChange = { winText = it },
-                            label = { Text("Extra punten winst") },
+                            label = { Text("Winst") },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.weight(1f)
                         )
                     }
+                    OutlinedTextField(
+                        value = drawText,
+                        onValueChange = { drawText = it },
+                        label = { Text("Gelijkspel") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
                     Text(
-                        "Bij een wijziging wordt de volledige ranking (ook alle eerdere wedstrijden) automatisch herberekend.",
+                        "Bij een wijziging wordt de volledige ranking automatisch herberekend.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -85,7 +94,8 @@ fun SettingsScreen(onOpenPlayers: () -> Unit) {
                         onClick = {
                             val a = attText.toIntOrNull()
                             val w = winText.toIntOrNull()
-                            if (a != null && w != null && a >= 0 && w >= 0) {
+                            val d = drawText.toIntOrNull()
+                            if (a != null && w != null && d != null && a >= 0 && w >= 0 && d >= 0) {
                                 showConfirm = true
                             } else {
                                 Toast.makeText(context, "Vul geldige punten in", Toast.LENGTH_SHORT).show()
@@ -138,7 +148,7 @@ fun SettingsScreen(onOpenPlayers: () -> Unit) {
         item {
             SectionTitle("Over")
             Text(
-                "TeamCreatorr v1.0.0\nZaalvoetbal Teams & Ranking.\nAlle gegevens worden lokaal op dit apparaat opgeslagen.",
+                "TeamCreatorr v1.1.0\nZaalvoetbal Teams & Ranking.\nAlle gegevens worden lokaal op dit apparaat opgeslagen.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -152,12 +162,17 @@ fun SettingsScreen(onOpenPlayers: () -> Unit) {
             text = {
                 Text(
                     "De nieuwe puntentelling (aanwezigheid: ${attText.toIntOrNull() ?: 0}, " +
-                        "winst: ${winText.toIntOrNull() ?: 0}) wordt toegepast op alle spelers en alle wedstrijden."
+                        "winst: ${winText.toIntOrNull() ?: 0}, gelijkspel: ${drawText.toIntOrNull() ?: 0}) " +
+                        "wordt toegepast op alle spelers en alle wedstrijden."
                 )
             },
             confirmButton = {
                 TextButton(onClick = {
-                    vm.updateSettings(attText.toIntOrNull() ?: 0, winText.toIntOrNull() ?: 0)
+                    vm.updateSettings(
+                        attText.toIntOrNull() ?: 0,
+                        winText.toIntOrNull() ?: 0,
+                        drawText.toIntOrNull() ?: 0
+                    )
                     showConfirm = false
                     Toast.makeText(context, "Puntentelling bijgewerkt", Toast.LENGTH_SHORT).show()
                 }) { Text("Toepassen") }
@@ -178,24 +193,34 @@ private fun buildCsv(
     sb.appendLine("TeamCreatorr export")
     sb.appendLine()
     sb.appendLine("PUNTENTELLING")
-    sb.appendLine("Aanwezigheid;Winst")
-    sb.appendLine("${settings.attendancePoints};${settings.winPoints}")
+    sb.appendLine("Aanwezigheid;Winst;Gelijkspel")
+    sb.appendLine("${settings.attendancePoints};${settings.winPoints};${settings.drawPoints}")
     sb.appendLine()
     sb.appendLine("RANKING")
-    sb.appendLine("Positie;Naam;Deelnames;Winst;Verlies;Gelijk;Aanwezigheidspunten;Winstpunten;Totaal")
+    sb.appendLine("Positie;Naam;Deelnames;Winst;Verlies;Gelijk;Aanwezigheid;Winst;Gelijkspel;Handmatig;Totaal")
     ranking.forEach {
-        sb.appendLine("${it.rank};${it.name};${it.played};${it.wins};${it.losses};${it.draws};${it.attendancePoints};${it.winPoints};${it.totalPoints}")
+        sb.appendLine(
+            "${it.rank};${it.name};${it.played};${it.wins};${it.losses};${it.draws};" +
+                "${it.attendancePoints};${it.winPoints};${it.drawPoints};${it.manualPoints};${it.totalPoints}"
+        )
     }
     sb.appendLine()
     sb.appendLine("WEDSTRIJDEN")
-    sb.appendLine("Datum;Team A;Team B;Score A;Score B")
+    sb.appendLine("Datum;Status;Team A;Team B;Score A;Score B")
     matches.forEach {
         sb.appendLine(
-            "${Formatters.formatDate(it.date)};${it.teamA.joinToString(", ") { p -> p.name }};" +
+            "${Formatters.formatDate(it.date)};${statusName(it.status)};" +
+                "${it.teamA.joinToString(", ") { p -> p.name }};" +
                 "${it.teamB.joinToString(", ") { p -> p.name }};${it.scoreA ?: ""};${it.scoreB ?: ""}"
         )
     }
     return sb.toString()
+}
+
+private fun statusName(status: MatchStatus): String = when (status) {
+    MatchStatus.CONFIRMED -> "Nog te spelen"
+    MatchStatus.PLAYED -> "Gespeeld"
+    MatchStatus.FINISHED -> "Afgerond"
 }
 
 private fun shareText(context: android.content.Context, text: String) {
@@ -206,4 +231,5 @@ private fun shareText(context: android.content.Context, text: String) {
     }
     context.startActivity(Intent.createChooser(intent, "Exporteren"))
 }
+
 

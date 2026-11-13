@@ -1,41 +1,44 @@
 package nl.tartaruzz.teamcreatorr.ui.screens.players
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import android.graphics.BitmapFactory
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.shape.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.*
+import androidx.compose.ui.draw.*
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.layout.*
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.*
+import androidx.compose.ui.text.font.*
+import androidx.compose.ui.unit.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import nl.tartaruzz.teamcreatorr.domain.ManualAdjustment
 import nl.tartaruzz.teamcreatorr.domain.PlayerHistoryItem
 import nl.tartaruzz.teamcreatorr.domain.PlayerProfileUiData
-import nl.tartaruzz.teamcreatorr.ui.components.EmptyState
+import nl.tartaruzz.teamcreatorr.domain.PointHistoryEntry
 import nl.tartaruzz.teamcreatorr.ui.components.SectionTitle
 import nl.tartaruzz.teamcreatorr.ui.theme.TeamAColor
 import nl.tartaruzz.teamcreatorr.ui.theme.TeamBColor
 import nl.tartaruzz.teamcreatorr.ui.viewmodel.PlayerProfileViewModel
 import nl.tartaruzz.teamcreatorr.ui.viewmodel.appViewModel
 import nl.tartaruzz.teamcreatorr.util.Formatters
+import nl.tartaruzz.teamcreatorr.util.PhotoStore
+import java.io.File
 
 private enum class HistoryFilter(val label: String) {
-    ALL("Alle"),
-    WON("Gewonnen"),
-    LOST("Verloren"),
-    DRAW("Gelijk")
+    ALL("Alle"), WON("Gewonnen"), LOST("Verloren"), DRAW("Gelijk")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,7 +51,27 @@ fun PlayerProfileScreen(
     val vm: PlayerProfileViewModel = appViewModel()
     LaunchedEffect(playerId) { vm.load(playerId) }
     val profile by vm.profile.collectAsState()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var filter by remember { mutableStateOf(HistoryFilter.ALL) }
+
+    var showEdit by remember { mutableStateOf(false) }
+    var showAddAdjustment by remember { mutableStateOf(false) }
+    var editingAdjustment by remember { mutableStateOf<ManualAdjustment?>(null) }
+
+    val pickPhoto = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        uri?.let {
+            scope.launch {
+                val fileName = try {
+                    withContext(Dispatchers.IO) { PhotoStore.save(context, it, playerId) }
+                } catch (e: Exception) {
+                    null
+                }
+                if (fileName != null) vm.updatePhoto(playerId, fileName)
+                else Toast.makeText(context, "Foto kon niet worden geladen", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -57,6 +80,11 @@ fun PlayerProfileScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Terug")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showEdit = true }) {
+                        Icon(Icons.Filled.Edit, contentDescription = "Bewerken")
                     }
                 }
             )
@@ -68,12 +96,34 @@ fun PlayerProfileScreen(
                 CircularProgressIndicator()
             }
         } else {
+            val photoFile = PhotoStore.load(context, data.photoFileName)
             LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(padding),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                item { ProfileHeader(data) }
+                item {
+                    ProfileHeader(
+                        data = data,
+                        photoFile = photoFile,
+                        onPickPhoto = { pickPhoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                        onRemovePhoto = {
+                            PhotoStore.delete(context, data.photoFileName)
+                            vm.updatePhoto(data.playerId, null)
+                        }
+                    )
+                }
+
+                item {
+                    SectionTitle("Puntenopbouw")
+                    PointsSection(
+                        entries = data.pointHistory,
+                        onAdd = { showAddAdjustment = true },
+                        onEdit = { id -> editingAdjustment = data.manualAdjustments.firstOrNull { it.id == id } },
+                        onDelete = { id -> vm.deleteAdjustment(id) }
+                    )
+                }
+
                 item {
                     SectionTitle("Wedstrijdgeschiedenis")
                     FilterChips(filter) { filter = it }
@@ -81,10 +131,7 @@ fun PlayerProfileScreen(
                 val filtered = filteredHistory(data.history, filter)
                 if (filtered.isEmpty()) {
                     item {
-                        Text(
-                            "Geen wedstrijden voor dit filter.",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Text("Geen wedstrijden voor dit filter.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 } else {
                     items(filtered, key = { it.matchId }) { item ->
@@ -94,43 +141,106 @@ fun PlayerProfileScreen(
             }
         }
     }
+
+    if (showEdit && profile != null) {
+        var name by remember(profile!!.playerId) { mutableStateOf(profile!!.name) }
+        var nickname by remember(profile!!.playerId) { mutableStateOf(profile!!.nickname ?: "") }
+        AlertDialog(
+            onDismissRequest = { showEdit = false },
+            title = { Text("Speler aanpassen") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Naam") }, singleLine = true)
+                    OutlinedTextField(value = nickname, onValueChange = { nickname = it }, label = { Text("Nickname (optioneel)") }, singleLine = true)
+                }
+            },
+            confirmButton = {
+                TextButton(enabled = name.isNotBlank(), onClick = {
+                    vm.updatePlayer(profile!!.playerId, name, nickname.trim().ifEmpty { null })
+                    showEdit = false
+                }) { Text("Opslaan") }
+            },
+            dismissButton = { TextButton(onClick = { showEdit = false }) { Text("Annuleren") } }
+        )
+    }
+
+    if (showAddAdjustment && profile != null) {
+        var points by remember { mutableStateOf("") }
+        var desc by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showAddAdjustment = false },
+            title = { Text("Punten toevoegen / aftrekken") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = points,
+                        onValueChange = { points = it },
+                        label = { Text("Aantal punten (bijv. 5 of -3)") },
+                        singleLine = true
+                    )
+                    OutlinedTextField(value = desc, onValueChange = { desc = it }, label = { Text("Omschrijving (verplicht)") })
+                }
+            },
+            confirmButton = {
+                TextButton(enabled = points.toIntOrNull() != null && desc.isNotBlank(), onClick = {
+                    vm.addAdjustment(profile!!.playerId, points.toIntOrNull() ?: 0, desc)
+                    showAddAdjustment = false
+                }) { Text("Opslaan") }
+            },
+            dismissButton = { TextButton(onClick = { showAddAdjustment = false }) { Text("Annuleren") } }
+        )
+    }
+
+    editingAdjustment?.let { adj ->
+        var points by remember(adj.id) { mutableStateOf(adj.points.toString()) }
+        var desc by remember(adj.id) { mutableStateOf(adj.description) }
+        AlertDialog(
+            onDismissRequest = { editingAdjustment = null },
+            title = { Text("Puntmutatie aanpassen") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = points,
+                        onValueChange = { points = it },
+                        label = { Text("Aantal punten") },
+                        singleLine = true
+                    )
+                    OutlinedTextField(value = desc, onValueChange = { desc = it }, label = { Text("Omschrijving") })
+                }
+            },
+            confirmButton = {
+                TextButton(enabled = points.toIntOrNull() != null && desc.isNotBlank(), onClick = {
+                    vm.updateAdjustment(adj.id, points.toIntOrNull() ?: 0, desc)
+                    editingAdjustment = null
+                }) { Text("Opslaan") }
+            },
+            dismissButton = { TextButton(onClick = { editingAdjustment = null }) { Text("Annuleren") } }
+        )
+    }
 }
 
 @Composable
-private fun ProfileHeader(data: PlayerProfileUiData) {
-    Card(
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
+private fun ProfileHeader(
+    data: PlayerProfileUiData,
+    photoFile: File?,
+    onPickPhoto: () -> Unit,
+    onRemovePhoto: () -> Unit
+) {
+    Card(shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Column(Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Box(
-                    Modifier
-                        .size(52.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        data.name.take(1).uppercase(),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                }
+                PhotoAvatar(photoFile, data.name)
                 Column(Modifier.weight(1f)) {
                     Text(data.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                    if (!data.active) {
-                        Text("Inactief", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
+                    if (!data.nickname.isNullOrBlank()) {
+                        Text("\"${data.nickname}\"", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
+                    if (!data.active) Text("Inactief", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
                     val rank = data.stats?.rank
                     if (rank != null) {
-                        Text(
-                            "Positie: #$rank",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        Text("Positie: #$rank", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
                     }
+                    Text("Rating: ${data.rating}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.secondary)
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
@@ -160,6 +270,47 @@ private fun ProfileHeader(data: PlayerProfileUiData) {
                     fontWeight = FontWeight.SemiBold
                 )
             }
+            Spacer(Modifier.height(12.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = onPickPhoto, modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Filled.PhotoCamera, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.size(6.dp))
+                    Text("Foto wijzigen")
+                }
+                if (photoFile != null) {
+                    OutlinedButton(onClick = onRemovePhoto, modifier = Modifier.weight(1f)) {
+                        Text("Verwijderen")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PhotoAvatar(file: File?, name: String) {
+    val bitmap = remember(file?.absolutePath) { file?.let { BitmapFactory.decodeFile(it.absolutePath) } }
+    Box(
+        Modifier
+            .size(72.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primary),
+        contentAlignment = Alignment.Center
+    ) {
+        if (bitmap != null) {
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = "Profielfoto",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Text(
+                name.take(1).uppercase(),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimary
+            )
         }
     }
 }
@@ -176,6 +327,56 @@ private fun HeaderStat(label: String, value: String, modifier: Modifier = Modifi
         Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
+
+@Composable
+private fun PointsSection(
+    entries: List<PointHistoryEntry>,
+    onAdd: () -> Unit,
+    onEdit: (Long) -> Unit,
+    onDelete: (Long) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        OutlinedButton(onClick = onAdd, modifier = Modifier.fillMaxWidth()) {
+            Text("Punten toevoegen / aftrekken")
+        }
+        if (entries.isEmpty()) {
+            Text("Nog geen punten.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        } else {
+            entries.forEach { entry ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            Formatters.formatDate(entry.date),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            entry.description,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = if (entry.isManual) FontWeight.SemiBold else FontWeight.Normal
+                        )
+                    }
+                    Text(
+                        signed(entry.points),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = if (entry.points >= 0) Color(0xFF43A047) else Color(0xFFE53935)
+                    )
+                    if (entry.isManual && entry.adjustmentId != null) {
+                        IconButton(onClick = { onEdit(entry.adjustmentId!!) }) {
+                            Icon(Icons.Filled.Edit, contentDescription = "Bewerken", modifier = Modifier.size(18.dp))
+                        }
+                        IconButton(onClick = { onDelete(entry.adjustmentId!!) }) {
+                            Icon(Icons.Filled.Delete, contentDescription = "Verwijderen", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun signed(value: Int) = if (value >= 0) "+$value" else "$value"
 
 @Composable
 private fun FilterChips(selected: HistoryFilter, onSelect: (HistoryFilter) -> Unit) {
@@ -228,7 +429,7 @@ private fun OutcomeLabel(item: PlayerHistoryItem) {
 }
 
 @Composable
-private fun annotatedScore(item: PlayerHistoryItem): androidx.compose.ui.text.AnnotatedString {
+private fun annotatedScore(item: PlayerHistoryItem): AnnotatedString {
     val own = item.team
     return buildAnnotatedString {
         withStyle(
@@ -269,3 +470,6 @@ private fun hasResult(item: PlayerHistoryItem) = item.scoreA != null && item.sco
 private fun isDraw(item: PlayerHistoryItem) = hasResult(item) && item.scoreA == item.scoreB
 private fun isWin(item: PlayerHistoryItem) = hasResult(item) &&
     ((item.team == "A" && item.scoreA!! > item.scoreB!!) || (item.team == "B" && item.scoreB!! > item.scoreA!!))
+
+
+

@@ -1,10 +1,10 @@
 package nl.tartaruzz.teamcreatorr.ui.screens.match
 
 import android.app.DatePickerDialog
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,9 +22,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import nl.tartaruzz.teamcreatorr.domain.MatchDetail
+import nl.tartaruzz.teamcreatorr.domain.MatchStatus
+import nl.tartaruzz.teamcreatorr.domain.ShareTextBuilder
 import nl.tartaruzz.teamcreatorr.ui.components.ResultBadge
 import nl.tartaruzz.teamcreatorr.ui.components.SectionTitle
 import nl.tartaruzz.teamcreatorr.ui.components.TeamCard
+import nl.tartaruzz.teamcreatorr.ui.components.statusColor
+import nl.tartaruzz.teamcreatorr.ui.components.statusLabel
 import nl.tartaruzz.teamcreatorr.ui.theme.TeamAColor
 import nl.tartaruzz.teamcreatorr.ui.theme.TeamBColor
 import nl.tartaruzz.teamcreatorr.ui.viewmodel.MatchDetailViewModel
@@ -51,8 +56,16 @@ fun MatchDetailScreen(matchId: Long, onBack: () -> Unit) {
         if (m != null && !initialized) {
             scoreAText = m.scoreA?.toString() ?: ""
             scoreBText = m.scoreB?.toString() ?: ""
-            editingResult = !m.hasResult
+            editingResult = m.status == MatchStatus.PLAYED
             initialized = true
+        }
+    }
+    LaunchedEffect(match?.status) {
+        val m = match ?: return@LaunchedEffect
+        if (m.status == MatchStatus.PLAYED && !editingResult) {
+            scoreAText = ""
+            scoreBText = ""
+            editingResult = true
         }
     }
 
@@ -93,77 +106,16 @@ fun MatchDetailScreen(matchId: Long, onBack: () -> Unit) {
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             m.note?.let {
-                                Spacer(Modifier.height(6.dp))
+                                Spacer(Modifier.height(4.dp))
                                 Text(it, style = MaterialTheme.typography.bodyMedium)
                             }
-                        }
-                    }
-                }
-
-                item {
-                    SectionTitle("Uitslag")
-                    if (m.hasResult && !editingResult) {
-                        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-                            Column(Modifier.padding(14.dp)) {
-                                Text(
-                                    "Team A ${m.scoreA} - ${m.scoreB} Team B",
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Spacer(Modifier.height(4.dp))
-                                ResultBadge(m)
-                                Spacer(Modifier.height(10.dp))
-                                OutlinedButton(onClick = { editingResult = true }) {
-                                    Icon(Icons.Filled.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
-                                    Spacer(Modifier.size(6.dp))
-                                    Text("Uitslag aanpassen")
-                                }
-                            }
-                        }
-                    } else {
-                        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-                            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                Text(
-                                    if (m.hasResult) "Uitslag aanpassen" else "Uitslag nog niet ingevuld",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    OutlinedTextField(
-                                        value = scoreAText,
-                                        onValueChange = { scoreAText = it },
-                                        label = { Text("Score Team A") },
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    Text("—", style = MaterialTheme.typography.titleLarge)
-                                    OutlinedTextField(
-                                        value = scoreBText,
-                                        onValueChange = { scoreBText = it },
-                                        label = { Text("Score Team B") },
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                }
-                                Button(
-                                    onClick = {
-                                        val a = scoreAText.toIntOrNull()
-                                        val b = scoreBText.toIntOrNull()
-                                        if (a != null && b != null && a >= 0 && b >= 0) {
-                                            vm.saveResult(m.id, a, b)
-                                            editingResult = false
-                                            Toast.makeText(context, "Uitslag opgeslagen", Toast.LENGTH_SHORT).show()
-                                        } else {
-                                            Toast.makeText(context, "Vul geldige scores in", Toast.LENGTH_SHORT).show()
-                                        }
-                                    },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Icon(Icons.Filled.Save, contentDescription = null, modifier = Modifier.size(18.dp))
-                                    Spacer(Modifier.size(6.dp))
-                                    Text("Uitslag opslaan")
-                                }
-                            }
+                            Spacer(Modifier.height(6.dp))
+                            Text(
+                                statusLabel(m.status),
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = statusColor(m.status)
+                            )
                         }
                     }
                 }
@@ -177,11 +129,111 @@ fun MatchDetailScreen(matchId: Long, onBack: () -> Unit) {
                 }
 
                 item {
+                    OutlinedButton(
+                        onClick = { shareTeams(context, m) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Filled.Share, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.size(6.dp))
+                        Text("Deel teamindeling")
+                    }
+                }
+
+                when {
+                    m.status == MatchStatus.CONFIRMED -> {
+                        item {
+                            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    Text(
+                                        "Deze wedstrijd moet nog gespeeld worden. Markeer hem als gespeeld zodra de wedstrijd heeft plaatsgevonden.",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    Button(onClick = { vm.markPlayed(m.id) }, modifier = Modifier.fillMaxWidth()) {
+                                        Text("Markeer als gespeeld")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    m.status == MatchStatus.FINISHED && !editingResult -> {
+                        item {
+                            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    Text(
+                                        "Team A ${m.scoreA} - ${m.scoreB} Team B",
+                                        style = MaterialTheme.typography.headlineSmall,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    ResultBadge(m)
+                                    OutlinedButton(onClick = {
+                                        scoreAText = m.scoreA?.toString() ?: ""
+                                        scoreBText = m.scoreB?.toString() ?: ""
+                                        editingResult = true
+                                    }) {
+                                        Icon(Icons.Filled.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
+                                        Spacer(Modifier.size(6.dp))
+                                        Text("Uitslag aanpassen")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else -> {
+                        item {
+                            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    Text(
+                                        "Uitslag invoeren",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        OutlinedTextField(
+                                            value = scoreAText,
+                                            onValueChange = { scoreAText = it },
+                                            label = { Text("Score Team A") },
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        Text("—", style = MaterialTheme.typography.titleLarge)
+                                        OutlinedTextField(
+                                            value = scoreBText,
+                                            onValueChange = { scoreBText = it },
+                                            label = { Text("Score Team B") },
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+                                    Button(
+                                        onClick = {
+                                            val a = scoreAText.toIntOrNull()
+                                            val b = scoreBText.toIntOrNull()
+                                            if (a != null && b != null && a >= 0 && b >= 0) {
+                                                vm.saveResult(m.id, a, b)
+                                                editingResult = false
+                                                Toast.makeText(context, "Uitslag opgeslagen", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Toast.makeText(context, "Vul geldige scores in", Toast.LENGTH_SHORT).show()
+                                            }
+                                        },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Icon(Icons.Filled.Save, contentDescription = null, modifier = Modifier.size(18.dp))
+                                        Spacer(Modifier.size(6.dp))
+                                        Text("Uitslag opslaan")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                item {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedButton(onClick = { showEditDetails = true }, modifier = Modifier.weight(1f)) {
                             Icon(Icons.Filled.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.size(6.dp))
-                            Text("Gegevens aanpassen")
+                            Text("Gegevens")
                         }
                         OutlinedButton(
                             onClick = { showDelete = true },
@@ -254,8 +306,11 @@ fun MatchDetailScreen(matchId: Long, onBack: () -> Unit) {
             title = { Text("Wedstrijd verwijderen") },
             text = {
                 Text(
-                    "Weet je zeker dat je deze wedstrijd wilt verwijderen? " +
-                        "Alle aanwezigheids- en winstpunten van deze wedstrijd verdwijnen uit de ranking."
+                    if (match!!.status == MatchStatus.FINISHED) {
+                        "Weet je zeker dat je deze wedstrijd wilt verwijderen? Alle punten van deze wedstrijd verdwijnen uit de ranking."
+                    } else {
+                        "Weet je zeker dat je deze (nog niet gespeelde) wedstrijd wilt annuleren?"
+                    }
                 )
             },
             confirmButton = {
@@ -271,3 +326,13 @@ fun MatchDetailScreen(matchId: Long, onBack: () -> Unit) {
         )
     }
 }
+
+private fun shareTeams(context: android.content.Context, match: MatchDetail) {
+    val text = ShareTextBuilder.teamIndeling(match.teamA, match.teamB)
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_TEXT, text)
+    }
+    context.startActivity(Intent.createChooser(intent, "Teamindeling delen"))
+}
+

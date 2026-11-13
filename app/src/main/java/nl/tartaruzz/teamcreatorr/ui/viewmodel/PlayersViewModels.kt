@@ -6,7 +6,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
@@ -15,15 +14,14 @@ import nl.tartaruzz.teamcreatorr.data.PlayerEntity
 import nl.tartaruzz.teamcreatorr.data.Repository
 import nl.tartaruzz.teamcreatorr.domain.PlayerProfileUiData
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class PlayerListViewModel(private val repo: Repository) : ViewModel() {
 
     val players: StateFlow<List<PlayerEntity>> = repo.observePlayers()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    fun add(name: String) {
+    fun add(name: String, nickname: String?) {
         if (name.isBlank()) return
-        viewModelScope.launch { repo.addPlayer(name) }
+        viewModelScope.launch { repo.addPlayer(name, nickname) }
     }
 
     fun addMany(names: List<String>) {
@@ -31,9 +29,9 @@ class PlayerListViewModel(private val repo: Repository) : ViewModel() {
         if (clean.isNotEmpty()) viewModelScope.launch { repo.addPlayers(clean) }
     }
 
-    fun rename(id: Long, name: String) {
+    fun update(id: Long, name: String, nickname: String?) {
         if (name.isBlank()) return
-        viewModelScope.launch { repo.renamePlayer(id, name) }
+        viewModelScope.launch { repo.updatePlayer(id, name, nickname) }
     }
 
     fun setActive(id: Long, active: Boolean) {
@@ -59,12 +57,28 @@ class PlayerProfileViewModel(private val repo: Repository) : ViewModel() {
         idFlow.value = id
     }
 
-    fun rename(id: Long, name: String) {
+    fun updatePlayer(id: Long, name: String, nickname: String?) {
         if (name.isBlank()) return
-        viewModelScope.launch { repo.renamePlayer(id, name) }
+        viewModelScope.launch { repo.updatePlayer(id, name, nickname) }
     }
 
     fun setActive(id: Long, active: Boolean) {
         viewModelScope.launch { repo.setPlayerActive(id, active) }
+    }
+
+    fun updatePhoto(id: Long, photoFileName: String?) {
+        viewModelScope.launch { repo.updatePlayerPhoto(id, photoFileName) }
+    }
+
+    fun addAdjustment(playerId: Long, points: Int, description: String) {
+        viewModelScope.launch { repo.addAdjustment(playerId, points, description) }
+    }
+
+    fun updateAdjustment(id: Long, points: Int, description: String) {
+        viewModelScope.launch { repo.updateAdjustment(id, points, description) }
+    }
+
+    fun deleteAdjustment(id: Long) {
+        viewModelScope.launch { repo.deleteAdjustment(id) }
     }
 }

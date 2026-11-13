@@ -173,3 +173,18 @@ fun EmptyState(
         )
     }
 }
+
+/** Human readable label for a match status. */
+fun statusLabel(status: nl.tartaruzz.teamcreatorr.domain.MatchStatus): String = when (status) {
+    nl.tartaruzz.teamcreatorr.domain.MatchStatus.CONFIRMED -> "Teamindeling bevestigd"
+    nl.tartaruzz.teamcreatorr.domain.MatchStatus.PLAYED -> "Gespeeld — uitslag invoeren"
+    nl.tartaruzz.teamcreatorr.domain.MatchStatus.FINISHED -> "Afgerond"
+}
+
+/** Accent color for a match status. */
+fun statusColor(status: nl.tartaruzz.teamcreatorr.domain.MatchStatus): Color = when (status) {
+    nl.tartaruzz.teamcreatorr.domain.MatchStatus.CONFIRMED -> TeamAColor
+    nl.tartaruzz.teamcreatorr.domain.MatchStatus.PLAYED -> Color(0xFFF9A825)
+    nl.tartaruzz.teamcreatorr.domain.MatchStatus.FINISHED -> Color(0xFF43A047)
+}
+

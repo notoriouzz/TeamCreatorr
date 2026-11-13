@@ -2,8 +2,9 @@ package nl.tartaruzz.teamcreatorr.domain
 
 /**
  * Calculates player statistics and the ranking from raw data.
- * Points are always derived from attendance + results, so changing point
- * settings automatically recomputes everything (no stored points can get stale).
+ * Points are always derived from attendance + results + manual adjustments,
+ * so changing point settings automatically recomputes everything.
+ * Only matches with a result (FINISHED) contribute points.
  */
 object RankingCalculator {
 
@@ -12,6 +13,7 @@ object RankingCalculator {
     fun compute(
         players: List<PlayerInput>,
         participations: List<Participation>,
+        manualPoints: Map<Long, Int>,
         settings: PointSettings
     ): List<PlayerStats> {
         val stats = players.map { player ->
@@ -19,28 +21,33 @@ object RankingCalculator {
             var wins = 0
             var losses = 0
             var draws = 0
+            var played = 0
             for (row in rows) {
                 when (outcome(row.team, row.scoreA, row.scoreB)) {
-                    Outcome.WIN -> wins++
-                    Outcome.LOSS -> losses++
-                    Outcome.DRAW -> draws++
+                    Outcome.WIN -> { played++; wins++ }
+                    Outcome.LOSS -> { played++; losses++ }
+                    Outcome.DRAW -> { played++; draws++ }
                     Outcome.UNDECIDED -> Unit
                 }
             }
-            val attendance = rows.size
-            val attendancePoints = attendance * settings.attendancePoints
+            val attendancePoints = played * settings.attendancePoints
             val winPoints = wins * settings.winPoints
+            val drawPoints = draws * settings.drawPoints
+            val manual = manualPoints[player.id] ?: 0
             PlayerStats(
                 playerId = player.id,
                 name = player.name,
+                nickname = player.nickname,
                 active = player.active,
-                played = attendance,
+                played = played,
                 wins = wins,
                 losses = losses,
                 draws = draws,
                 attendancePoints = attendancePoints,
                 winPoints = winPoints,
-                totalPoints = attendancePoints + winPoints,
+                drawPoints = drawPoints,
+                manualPoints = manual,
+                totalPoints = attendancePoints + winPoints + drawPoints + manual,
                 rank = 0
             )
         }

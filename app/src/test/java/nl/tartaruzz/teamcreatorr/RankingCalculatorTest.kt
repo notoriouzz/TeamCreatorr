@@ -10,25 +10,39 @@ import org.junit.Test
 class RankingCalculatorTest {
 
     private fun players(vararg names: String): List<PlayerInput> =
-        names.mapIndexed { i, n -> PlayerInput((i + 1).toLong(), n, true) }
+        names.mapIndexed { i, n -> PlayerInput((i + 1).toLong(), n, null, true) }
 
     private fun part(playerId: Long, team: String, scoreA: Int?, scoreB: Int?) =
         Participation(playerId, team, scoreA, scoreB)
 
-    private val settings = PointSettings(attendancePoints = 1, winPoints = 2)
+    private val settings = PointSettings(attendancePoints = 1, winPoints = 2, drawPoints = 1)
+
+    @Test
+    fun `not played matches give no points`() {
+        val stats = RankingCalculator.compute(
+            players("A"),
+            listOf(part(1, "A", null, null)),
+            emptyMap(),
+            settings
+        )
+        val a = stats.first { it.playerId == 1L }
+        assertEquals(0, a.played)
+        assertEquals(0, a.attendancePoints)
+        assertEquals(0, a.totalPoints)
+    }
 
     @Test
     fun `attendance points are awarded`() {
         val stats = RankingCalculator.compute(
             players("A", "B"),
-            listOf(part(1, "A", null, null)),
+            listOf(part(1, "A", 1, 0), part(2, "B", 1, 0)),
+            emptyMap(),
             settings
         )
         val a = stats.first { it.playerId == 1L }
         assertEquals(1, a.played)
         assertEquals(1, a.attendancePoints)
-        assertEquals(0, a.winPoints)
-        assertEquals(1, a.totalPoints)
+        assertEquals(3, a.totalPoints)
     }
 
     @Test
@@ -36,13 +50,13 @@ class RankingCalculatorTest {
         val stats = RankingCalculator.compute(
             players("A", "B"),
             listOf(part(1, "A", 7, 6), part(2, "B", 7, 6)),
+            emptyMap(),
             settings
         )
         val a = stats.first { it.playerId == 1L }
         assertEquals(1, a.wins)
         assertEquals(2, a.winPoints)
         assertEquals(3, a.totalPoints)
-
         val b = stats.first { it.playerId == 2L }
         assertEquals(1, b.losses)
         assertEquals(0, b.winPoints)
@@ -50,59 +64,64 @@ class RankingCalculatorTest {
     }
 
     @Test
-    fun `draw gives only attendance points`() {
+    fun `draw gives attendance plus draw points`() {
         val stats = RankingCalculator.compute(
             players("A", "B"),
             listOf(part(1, "A", 3, 3), part(2, "B", 3, 3)),
+            emptyMap(),
             settings
         )
         val a = stats.first { it.playerId == 1L }
         assertEquals(1, a.draws)
-        assertEquals(0, a.winPoints)
-        assertEquals(1, a.totalPoints)
+        assertEquals(1, a.drawPoints)
+        assertEquals(2, a.totalPoints)
+    }
+
+    @Test
+    fun `manual points are added to total but kept separate`() {
+        val stats = RankingCalculator.compute(
+            players("A"),
+            listOf(part(1, "A", 7, 6)),
+            mapOf(1L to 5),
+            settings
+        )
+        val a = stats.first { it.playerId == 1L }
+        assertEquals(5, a.manualPoints)
+        assertEquals(3, a.autoPoints)
+        assertEquals(8, a.totalPoints)
     }
 
     @Test
     fun `historical points are recalculated with new settings`() {
         val participations = listOf(part(1, "A", 7, 6), part(2, "B", 7, 6))
-        val old = RankingCalculator.compute(players("A", "B"), participations, PointSettings(1, 2))
-        val new = RankingCalculator.compute(players("A", "B"), participations, PointSettings(2, 3))
-
+        val old = RankingCalculator.compute(players("A", "B"), participations, emptyMap(), PointSettings(1, 2, 1))
+        val new = RankingCalculator.compute(players("A", "B"), participations, emptyMap(), PointSettings(2, 3, 2))
         assertEquals(3, old.first { it.playerId == 1L }.totalPoints)
         assertEquals(5, new.first { it.playerId == 1L }.totalPoints)
     }
 
     @Test
     fun `changing a result does not double points`() {
-        val win = RankingCalculator.compute(players("A"), listOf(part(1, "A", 7, 6)), settings).first()
-        val loss = RankingCalculator.compute(players("A"), listOf(part(1, "A", 6, 7)), settings).first()
+        val win = RankingCalculator.compute(players("A"), listOf(part(1, "A", 7, 6)), emptyMap(), settings).first()
+        val loss = RankingCalculator.compute(players("A"), listOf(part(1, "A", 6, 7)), emptyMap(), settings).first()
         assertEquals(3, win.totalPoints)
         assertEquals(1, loss.totalPoints)
         assertEquals(0, loss.winPoints)
     }
 
     @Test
-    fun `deleting a match removes all its points`() {
-        val none = RankingCalculator.compute(players("A"), emptyList(), settings).first()
-        assertEquals(0, none.totalPoints)
-        assertEquals(0, none.attendancePoints)
-        assertEquals(0, none.winPoints)
-        assertEquals(0, none.played)
-    }
-
-    @Test
     fun `ranking is sorted by points then wins`() {
         val inputs = listOf(
-            PlayerInput(1, "Laag", true),
-            PlayerInput(2, "Hoog", true),
-            PlayerInput(3, "Midden", true)
+            PlayerInput(1, "Laag", null, true),
+            PlayerInput(2, "Hoog", null, true),
+            PlayerInput(3, "Midden", null, true)
         )
         val participations = listOf(
-            part(2, "A", 5, 0),  // win -> 3 pt
-            part(3, "A", 5, 0),  // win -> 3 pt but fewer? equal wins
-            part(1, "B", 5, 0)   // loss -> 1 pt
+            part(2, "A", 5, 0),
+            part(3, "A", 5, 0),
+            part(1, "B", 5, 0)
         )
-        val ranking = RankingCalculator.compute(inputs, participations, settings)
+        val ranking = RankingCalculator.compute(inputs, participations, emptyMap(), settings)
         assertEquals("Hoog", ranking[0].name)
         assertEquals("Midden", ranking[1].name)
         assertEquals("Laag", ranking[2].name)

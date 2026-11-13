@@ -11,12 +11,15 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import nl.tartaruzz.teamcreatorr.data.Repository
 import nl.tartaruzz.teamcreatorr.domain.MatchDetail
+import nl.tartaruzz.teamcreatorr.domain.MatchStatus
 import nl.tartaruzz.teamcreatorr.domain.PlayerStats
 
 data class HomeUiState(
     val totalPlayers: Int = 0,
     val activePlayers: Int = 0,
     val totalMatches: Int = 0,
+    val upcoming: List<MatchDetail> = emptyList(),
+    val finished: List<MatchDetail> = emptyList(),
     val topThree: List<PlayerStats> = emptyList(),
     val latestMatch: MatchDetail? = null,
     val loading: Boolean = true
@@ -34,12 +37,16 @@ class HomeViewModel(repo: Repository) : ViewModel() {
                 repo.observeRanking(),
                 repo.observeMatchDetails()
             ) { players, ranking, matches ->
+                val finished = matches.filter { it.status == MatchStatus.FINISHED }
+                val upcoming = matches.filter { it.status != MatchStatus.FINISHED }
                 HomeUiState(
                     totalPlayers = players.size,
                     activePlayers = players.count { it.active },
                     totalMatches = matches.size,
+                    upcoming = upcoming,
+                    finished = finished,
                     topThree = ranking.filter { it.active }.take(3),
-                    latestMatch = matches.firstOrNull(),
+                    latestMatch = finished.firstOrNull(),
                     loading = false
                 )
             }.collect { _state.value = it }

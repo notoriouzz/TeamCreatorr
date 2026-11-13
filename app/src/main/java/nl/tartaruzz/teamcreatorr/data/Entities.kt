@@ -9,6 +9,8 @@ import androidx.room.PrimaryKey
 data class PlayerEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
+    val nickname: String? = null,
+    val photoFileName: String? = null,
     val active: Boolean = true,
     val createdAt: Long = System.currentTimeMillis()
 )
@@ -21,6 +23,7 @@ data class MatchEntity(
     val teamSize: Int,
     val scoreA: Int? = null,
     val scoreB: Int? = null,
+    val status: Int = 0,
     val createdAt: Long = System.currentTimeMillis()
 )
 
@@ -73,9 +76,50 @@ data class DuoEntity(
     val playerBId: Long
 )
 
+/** Duos that were active for one specific match (stored at confirmation time). */
+@Entity(
+    tableName = "match_duos",
+    primaryKeys = ["matchId", "playerAId", "playerBId"],
+    foreignKeys = [
+        ForeignKey(
+            entity = MatchEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["matchId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index("matchId")]
+)
+data class MatchDuoEntity(
+    val matchId: Long,
+    val playerAId: Long,
+    val playerBId: Long
+)
+
+@Entity(
+    tableName = "point_adjustments",
+    foreignKeys = [
+        ForeignKey(
+            entity = PlayerEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["playerId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index("playerId")]
+)
+data class PointAdjustmentEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val playerId: Long,
+    val points: Int,
+    val description: String,
+    val createdAt: Long = System.currentTimeMillis()
+)
+
 @Entity(tableName = "settings")
 data class SettingsEntity(
     @PrimaryKey val id: Int = 1,
     val attendancePoints: Int = 1,
-    val winPoints: Int = 2
+    val winPoints: Int = 2,
+    val drawPoints: Int = 1
 )

@@ -10,6 +10,21 @@ zonder internetverbinding.
 
 ---
 
+## Nieuwe functies (v1.1.0)
+
+- **Nicknames**: optioneel per speler, zichtbaar in de ranking en in het
+  WhatsApp-deelbericht.
+- **Trofeeën** voor de top 3 van de ranking (goud, zilver, brons).
+- **Teamindeling delen** via de Android-deelsheet (WhatsApp en meer).
+- **Iedereen selecteren / alles wissen** bij het maken van een wedstrijd.
+- **Wedstrijdstatussen**: Teamindeling bevestigd → Gespeeld → Afgerond.
+  Nog niet gespeelde wedstrijden leveren (nog) geen punten op.
+- **Gelijkspelpunten** apart instelbaar (standaard 1 punt).
+- **Handmatige puntenmutaties** per speler, met volledige puntenopbouw.
+- **Spelersrating (1-99)** en optionele **ranking-gebaseerde teamindeling**.
+- **Profielfoto's** via de Android Photo Picker (automatisch geoptimaliseerd).
+- **Centraal duobeheer** in Instellingen, met tijdelijke duo's per wedstrijd.
+
 ## Wat kan de app?
 
 ### Spelersbeheer

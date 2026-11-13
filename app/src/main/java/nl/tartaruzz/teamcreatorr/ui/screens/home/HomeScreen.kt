@@ -25,6 +25,8 @@ import nl.tartaruzz.teamcreatorr.domain.PlayerStats
 import nl.tartaruzz.teamcreatorr.ui.components.EmptyState
 import nl.tartaruzz.teamcreatorr.ui.components.ResultBadge
 import nl.tartaruzz.teamcreatorr.ui.components.SectionTitle
+import nl.tartaruzz.teamcreatorr.ui.components.statusColor
+import nl.tartaruzz.teamcreatorr.ui.components.statusLabel
 import nl.tartaruzz.teamcreatorr.ui.theme.*
 import nl.tartaruzz.teamcreatorr.ui.viewmodel.HomeViewModel
 import nl.tartaruzz.teamcreatorr.ui.viewmodel.appViewModel
@@ -91,9 +93,22 @@ fun HomeScreen(
             }
 
             item {
-                SectionTitle("Laatste wedstrijd")
+                SectionTitle("Nog te spelen")
+                if (state.upcoming.isEmpty()) {
+                    Text("Geen geplande wedstrijden.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        state.upcoming.forEach { match ->
+                            UpcomingMatchCard(match, onClick = { onOpenMatch(match.id) })
+                        }
+                    }
+                }
+            }
+
+            item {
+                SectionTitle("Laatste uitslag")
                 if (state.latestMatch == null) {
-                    Text("Nog geen wedstrijden gespeeld.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Nog geen afgeronde wedstrijden.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 } else {
                     val match = state.latestMatch!!
                     LatestMatchCard(match, onClick = { onOpenMatch(match.id) })
@@ -221,6 +236,44 @@ private fun TopPlayerCard(position: Int, player: PlayerStats, medalColor: Color)
 }
 
 @Composable
+private fun UpcomingMatchCard(match: MatchDetail, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(Modifier.padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    Formatters.formatDate(match.date),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    "${match.teamSize} tegen ${match.teamSize}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "Teams staan klaar",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                statusLabel(match.status),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = statusColor(match.status)
+            )
+        }
+    }
+}
+
+@Composable
 private fun LatestMatchCard(match: MatchDetail, onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
@@ -248,3 +301,5 @@ private fun LatestMatchCard(match: MatchDetail, onClick: () -> Unit) {
 internal fun scoreText(match: MatchDetail): String =
     if (match.hasResult) "Team A ${match.scoreA} - ${match.scoreB} Team B"
     else "Team A - Team B"
+
+
