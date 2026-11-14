@@ -4,6 +4,14 @@ Alle noemenswaardige wijzigingen aan TeamCreatorr worden hier bijgehouden.
 
 Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1.0/).
 
+## [1.5.1] - 2026-11-14
+
+### Toegevoegd
+- "Ontwikkeld door Notoriouzz" toegevoegd aan Instellingen → Over, direct onder de versieaanduiding.
+
+### Gewijzigd
+- Versienummer verhoogd naar 1.5.1 (versionCode 8).
+
 ## [1.5.0] - 2026-11-14
 
 ### Toegevoegd

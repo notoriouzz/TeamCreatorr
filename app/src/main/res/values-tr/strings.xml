@@ -162,7 +162,7 @@
     <string name="ko_fi_body">A lot of time and effort goes into making TeamCreatorr better. If you enjoy using the app, why not fuel the next update with a coffee? No pressure, just appreciation!</string>
     <string name="ko_fi_link">Buy me a coffee on Ko-fi</string>
     <string name="settings_about">Hakkında</string>
-    <string name="settings_about_text">TeamCreatorr v1.5.0\nTakımlar ve Sıralama.\nTüm veriler bu cihazda yerel olarak saklanır.</string>
+    <string name="settings_about_text">TeamCreatorr v1.5.1\nNotoriouzz tarafından geliştirildi\nTakımlar ve Sıralama.\nTüm veriler bu cihazda yerel olarak saklanır.</string>
 
     <!-- Görünüm -->
     <string name="settings_appearance">Görünüm</string>

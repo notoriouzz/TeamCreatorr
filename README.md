@@ -97,4 +97,4 @@ Zie [docs/GEBRUIKERSHANDLEIDING.md](docs/GEBRUIKERSHANDLEIDING.md).
 
 ## Versie
 
-Huidige versie: **1.5.0** (zie [CHANGELOG.md](CHANGELOG.md)).
+Huidige versie: **1.5.1** (zie [CHANGELOG.md](CHANGELOG.md)).

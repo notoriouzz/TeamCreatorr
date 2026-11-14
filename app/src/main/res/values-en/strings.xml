@@ -162,7 +162,7 @@
     <string name="ko_fi_body">A lot of time and effort goes into making TeamCreatorr better. If you enjoy using the app, why not fuel the next update with a coffee? No pressure, just appreciation!</string>
     <string name="ko_fi_link">Buy me a coffee on Ko-fi</string>
     <string name="settings_about">About</string>
-    <string name="settings_about_text">TeamCreatorr v1.5.0\nTeams &amp; Ranking.\nAll data is stored locally on this device.</string>
+    <string name="settings_about_text">TeamCreatorr v1.5.1\nDeveloped by Notoriouzz\nTeams &amp; Ranking.\nAll data is stored locally on this device.</string>
 
     <!-- Appearance -->
     <string name="settings_appearance">Appearance</string>

@@ -8,7 +8,7 @@ De app heeft onderin een zwevende navigatiebalk met vijf pictogrammen:
 2. **Spelers** — spelerslijst (toevoegen, selecteren en verwijderen).
 3. **Wedstrijd** — alle wedstrijden (gepland én afgerond) + nieuwe wedstrijd maken.
 4. **Ranking** — de standentabel (positie, P/W/D/L, Win%, Pts en Form).
-5. **Instellingen** — taal, puntentelling, back-up, reset en donatie.
+5. **Instellingen** — taal, donkere modus, meldingen (toast), puntentelling, back-up, reset en donatie.
 
 ## Spelers toevoegen
 
@@ -30,7 +30,7 @@ De app heeft onderin een zwevende navigatiebalk met vijf pictogrammen:
 
 ## Uitslag invoeren
 
-1. Open een wedstrijd via **Wedstrijd** of **Historie**.
+1. Open een wedstrijd via **Wedstrijd**.
 2. Tik op **Uitslag toevoegen**.
 3. Kies beide scores met de verticale scrollers (0–30, standaard 0-0) en tik op **Uitslag opslaan**.
 
@@ -44,6 +44,7 @@ De app heeft onderin een zwevende navigatiebalk met vijf pictogrammen:
 ## Duo's
 
 - Beheer duo's uitsluitend in het wedstrijdscherm (sectie **Duo's**).
+- Kies per duo of de twee spelers **samen in hetzelfde team** moeten of juist **niet samen in hetzelfde team**.
 - Elk opgeslagen duo heeft een aan/uit-schakelaar. Uitgeschakelde duo's doen niet mee aan de teamindeling.
 
 ## Profielen en geschiedenis
@@ -61,7 +62,7 @@ De app heeft onderin een zwevende navigatiebalk met vijf pictogrammen:
 
 - **Instellingen → Exporteren (back-up)** slaat een JSON-back-up op.
 - **Instellingen → Importeren (back-up)** leest een back-up in (vervangen of samenvoegen).
-- **Instellingen → Reset**: alles, alleen wedstrijdgeschiedenis, alleen spelers of alleen ranking.
+- **Instellingen → Reset**: alles, alleen wedstrijdgeschiedenis of alleen spelers.
 
 ## Doneren
 
