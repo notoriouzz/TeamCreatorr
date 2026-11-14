@@ -24,7 +24,7 @@
 ### Stappen
 ```bash
 # 1. Repository clonen
-git clone https://github.com/<gebruiker>/TeamCreatorr.git
+git clone https://github.com/notoriouzz/TeamCreatorr.git
 cd TeamCreatorr
 
 # 2. Debug-APK bouwen
