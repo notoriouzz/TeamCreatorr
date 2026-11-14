@@ -1,7 +1,6 @@
 package nl.tartaruzz.teamcreatorr.ui.screens.match
 
 import android.content.Intent
-import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -31,6 +30,7 @@ import nl.tartaruzz.teamcreatorr.ui.theme.TeamBColor
 import nl.tartaruzz.teamcreatorr.ui.viewmodel.MatchDetailViewModel
 import nl.tartaruzz.teamcreatorr.ui.viewmodel.appViewModel
 import nl.tartaruzz.teamcreatorr.util.Formatters
+import nl.tartaruzz.teamcreatorr.util.Toasts
 
 @Composable
 fun MatchDetailScreen(matchId: Long, onBack: () -> Unit) {
@@ -111,7 +111,7 @@ fun MatchDetailScreen(matchId: Long, onBack: () -> Unit) {
                                     onClick = {
                                         vm.saveResult(m.id, scoreA, scoreB)
                                         editingResult = false
-                                        Toast.makeText(context, context.getString(R.string.match_detail_saved), Toast.LENGTH_SHORT).show()
+                                        Toasts.show(context, R.string.match_detail_saved)
                                     },
                                     modifier = Modifier.fillMaxWidth()
                                 ) {

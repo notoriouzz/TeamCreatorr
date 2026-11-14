@@ -162,13 +162,27 @@
     <string name="ko_fi_body">A lot of time and effort goes into making TeamCreatorr better. If you enjoy using the app, why not fuel the next update with a coffee? No pressure, just appreciation!</string>
     <string name="ko_fi_link">Buy me a coffee on Ko-fi</string>
     <string name="settings_about">Hakkında</string>
-    <string name="settings_about_text">TeamCreatorr v1.4.0\nTakımlar ve Sıralama.\nTüm veriler bu cihazda yerel olarak saklanır.</string>
+    <string name="settings_about_text">TeamCreatorr v1.5.0\nTakımlar ve Sıralama.\nTüm veriler bu cihazda yerel olarak saklanır.</string>
+
+    <!-- Görünüm -->
+    <string name="settings_appearance">Görünüm</string>
+    <string name="settings_dark_mode">Karanlık mod</string>
+    <string name="settings_dark_mode_desc">Uygulama için açık veya koyu bir görünüm arasında geçiş yapın.</string>
+
+    <!-- Bildirimler -->
+    <string name="settings_notifications">Bildirimler</string>
+    <string name="settings_toast_enabled">Toast bildirimleri</string>
+    <string name="settings_toast_desc">Uygulamayı kullanırken kısa onay bildirimleri göster.</string>
+    <string name="settings_toast_position">Konum</string>
+    <string name="settings_toast_top">Üst</string>
+    <string name="settings_toast_middle">Orta</string>
+    <string name="settings_toast_bottom">Alt</string>
+
     <string name="settings_reset">Sıfırla</string>
     <string name="settings_reset_desc">Uygulamadaki verileri sil.</string>
     <string name="settings_reset_all">Her şeyi sıfırla</string>
     <string name="settings_reset_matches">Yalnızca maç geçmişini sıfırla</string>
     <string name="settings_reset_players">Yalnızca oyuncuları sıfırla</string>
-    <string name="settings_reset_ranking">Yalnızca sıralamayı sıfırla</string>
     <string name="lang_dutch">Nederlands</string>
     <string name="lang_english">English</string>
     <string name="lang_turkish">Türkçe</string>
@@ -188,7 +202,6 @@
     <string name="reset_confirm_all">HER ŞEYİ sıfırlamak istediğinize emin misiniz? Tüm oyuncular, maçlar, ikililer ve ayarlar kalıcı olarak silinecek.</string>
     <string name="reset_confirm_matches">Tüm maç geçmişini silmek istediğinize emin misiniz? Oyuncular korunacak.</string>
     <string name="reset_confirm_players">Tüm oyuncuları silmek istediğinize emin misiniz? Maçlar, ikililer ve sıralama da silinecek.</string>
-    <string name="reset_confirm_ranking">Sıralamayı sıfırlamak istediğinize emin misiniz? Manuel puan düzeltmeleri silinecek. Maç geçmişi ve oyuncular korunacak.</string>
     <string name="reset_done">Sıfırlama tamamlandı</string>
     <string name="back">Geri</string>
     <string name="save">Kaydet</string>

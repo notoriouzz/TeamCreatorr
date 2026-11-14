@@ -72,7 +72,9 @@ data class MatchPlayerEntity(
 data class DuoEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val playerAId: Long,
-    val playerBId: Long
+    val playerBId: Long,
+    /** [nl.tartaruzz.teamcreatorr.domain.DuoMode.TOGETHER] (0) or SEPARATE (1). */
+    val mode: Int = 0
 )
 
 /** Duos that were active for one specific match (stored at confirmation time). */
@@ -92,7 +94,9 @@ data class DuoEntity(
 data class MatchDuoEntity(
     val matchId: Long,
     val playerAId: Long,
-    val playerBId: Long
+    val playerBId: Long,
+    /** [nl.tartaruzz.teamcreatorr.domain.DuoMode.TOGETHER] (0) or SEPARATE (1). */
+    val mode: Int = 0
 )
 
 @Entity(

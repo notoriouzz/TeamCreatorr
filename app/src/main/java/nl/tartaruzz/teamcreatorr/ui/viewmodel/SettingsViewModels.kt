@@ -37,5 +37,4 @@ class SettingsViewModel(private val repo: Repository) : ViewModel() {
     fun resetAll(onDone: () -> Unit = {}) = viewModelScope.launch { repo.resetAll(); onDone() }
     fun resetMatches(onDone: () -> Unit = {}) = viewModelScope.launch { repo.resetMatches(); onDone() }
     fun resetPlayers(onDone: () -> Unit = {}) = viewModelScope.launch { repo.resetPlayers(); onDone() }
-    fun resetRanking(onDone: () -> Unit = {}) = viewModelScope.launch { repo.resetRanking(); onDone() }
 }

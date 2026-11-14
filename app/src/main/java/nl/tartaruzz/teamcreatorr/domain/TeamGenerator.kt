@@ -5,10 +5,13 @@ import kotlin.random.Random
 
 /**
  * Generates two equally sized teams from a set of players while respecting
- * "keep together" duos. Pure Kotlin so it can be unit-tested on the JVM.
+ * duo constraints. Pure Kotlin so it can be unit-tested on the JVM.
+ *
+ * A duo is either [DuoMode.TOGETHER] (both players must end up in the same
+ * team) or [DuoMode.SEPARATE] (both players must end up in different teams).
  *
  * Two strategies are available:
- *  - [generate]: fully random assignment.
+ *  - [generate]: random assignment that satisfies every constraint.
  *  - [generateBalanced]: tries to balance the total team ratings.
  */
 object TeamGenerator {
@@ -24,14 +27,23 @@ object TeamGenerator {
     }
 
     private sealed interface Prepared {
-        data class Groups(val groups: List<List<Long>>) : Prepared
+        data class Groups(val groups: List<Group>) : Prepared
         data class Invalid(val reason: String) : Prepared
+    }
+
+    /**
+     * A single assignment unit. [Fixed] players must stay together in one team,
+     * [Separate] players must be split over the two teams.
+     */
+    private sealed interface Group {
+        data class Fixed(val players: List<Long>) : Group
+        data class Separate(val a: Long, val b: Long) : Group
     }
 
     fun generate(
         players: List<Long>,
         teamSize: Int,
-        duos: List<Pair<Long, Long>>,
+        duos: List<DuoConstraint>,
         random: Random = Random.Default
     ): Result {
         val prepared = prepare(players, teamSize, duos)
@@ -40,9 +52,8 @@ object TeamGenerator {
 
         val teamA = mutableListOf<Long>()
         val teamB = mutableListOf<Long>()
-        val found = assignRandom(groups.shuffled(random), 0, teamA, teamB, teamSize, random)
-        if (!found) {
-            return Result.Failure("Geen geldige verdeling gevonden voor deze duo-combinatie.")
+        if (!backtrack(groups.shuffled(random), 0, teamA, teamB, teamSize, random)) {
+            return Result.Failure(INFEASIBLE)
         }
         return Result.Success(TeamSplit(teamA = teamA.toList(), teamB = teamB.toList()))
     }
@@ -50,7 +61,7 @@ object TeamGenerator {
     fun generateBalanced(
         players: List<Long>,
         teamSize: Int,
-        duos: List<Pair<Long, Long>>,
+        duos: List<DuoConstraint>,
         ratings: Map<Long, Int>,
         random: Random = Random.Default
     ): Result {
@@ -79,40 +90,20 @@ object TeamGenerator {
     private fun teamRating(team: List<Long>, ratings: Map<Long, Int>): Int =
         team.sumOf { ratings[it] ?: RatingCalculator.NEUTRAL_RATING }
 
-    /** Best-of-N greedy partition that keeps duos together and balances ratings. */
+    /** Best-of-N random valid assignments, keeping the most balanced one. */
     private fun assignBalanced(
-        groups: List<List<Long>>,
+        groups: List<Group>,
         teamSize: Int,
         ratings: Map<Long, Int>,
         random: Random
     ): TeamSplit? {
         var best: TeamSplit? = null
         var bestDiff = Int.MAX_VALUE
-        repeat(100) {
-            val shuffled = groups.shuffled(random)
+        repeat(250) {
             val a = mutableListOf<Long>()
             val b = mutableListOf<Long>()
-            var sumA = 0
-            var sumB = 0
-            for (g in shuffled) {
-                val gRating = g.sumOf { ratings[it] ?: RatingCalculator.NEUTRAL_RATING }
-                val canA = a.size + g.size <= teamSize
-                val canB = b.size + g.size <= teamSize
-                val chooseA = when {
-                    !canA -> false
-                    !canB -> true
-                    sumA < sumB -> true
-                    sumB < sumA -> false
-                    else -> random.nextBoolean()
-                }
-                if (chooseA) {
-                    a.addAll(g); sumA += gRating
-                } else {
-                    b.addAll(g); sumB += gRating
-                }
-            }
-            if (a.size == teamSize && b.size == teamSize) {
-                val diff = abs(sumA - sumB)
+            if (backtrack(groups.shuffled(random), 0, a, b, teamSize, random)) {
+                val diff = abs(teamRating(a, ratings) - teamRating(b, ratings))
                 if (diff < bestDiff) {
                     bestDiff = diff
                     best = TeamSplit(a.toList(), b.toList())
@@ -125,7 +116,7 @@ object TeamGenerator {
     private fun prepare(
         players: List<Long>,
         teamSize: Int,
-        duos: List<Pair<Long, Long>>
+        duos: List<DuoConstraint>
     ): Prepared {
         if (teamSize < 3 || teamSize > 11) {
             return Prepared.Invalid("Ongeldige teamgrootte. Kies 3 tot en met 11 spelers per team.")
@@ -140,36 +131,52 @@ object TeamGenerator {
 
         val selected = players.toSet()
         val playerInDuo = mutableSetOf<Long>()
-        for ((a, b) in duos) {
-            if (a == b) return Prepared.Invalid("Een duo moet uit twee verschillende spelers bestaan.")
-            if (a !in selected || b !in selected) {
+        val together = mutableListOf<List<Long>>()
+        val separate = mutableListOf<Group.Separate>()
+
+        for (c in duos) {
+            if (c.playerAId == c.playerBId) {
+                return Prepared.Invalid("Een duo moet uit twee verschillende spelers bestaan.")
+            }
+            if (c.playerAId !in selected || c.playerBId !in selected) {
                 return Prepared.Invalid("Een duo bevat een speler die niet is geselecteerd.")
             }
-            if (!playerInDuo.add(a)) return Prepared.Invalid("Een speler kan in maximaal één duo zitten.")
-            if (!playerInDuo.add(b)) return Prepared.Invalid("Een speler kan in maximaal één duo zitten.")
+            if (!playerInDuo.add(c.playerAId)) {
+                return Prepared.Invalid("Een speler kan in maximaal één duo zitten.")
+            }
+            if (!playerInDuo.add(c.playerBId)) {
+                return Prepared.Invalid("Een speler kan in maximaal één duo zitten.")
+            }
+            if (c.mode == DuoMode.TOGETHER) {
+                together.add(listOf(c.playerAId, c.playerBId))
+            } else {
+                separate.add(Group.Separate(c.playerAId, c.playerBId))
+            }
         }
 
-        val groups = mutableListOf<List<Long>>()
-        for ((a, b) in duos) groups.add(listOf(a, b))
-        for (p in players) if (p !in playerInDuo) groups.add(listOf(p))
-
-        if (groups.any { it.size > teamSize }) {
-            return Prepared.Invalid("Een gekoppeld duo past niet in een team van $teamSize spelers.")
-        }
-
-        val maxDuos = 2 * (teamSize / 2)
-        if (duos.size > maxDuos) {
+        // A "together" duo occupies two slots in one team, so at most
+        // floor(teamSize/2) of them fit per team.
+        val maxTogether = 2 * (teamSize / 2)
+        if (together.size > maxTogether) {
             return Prepared.Invalid(
-                "Deze duo-combinatie is niet mogelijk: je hebt ${duos.size} duo's ingesteld, " +
-                    "maar bij $teamSize tegen $teamSize passen maximaal $maxDuos duo's over twee even teams. " +
-                    "Ontkoppel minimaal ${duos.size - maxDuos} duo('s)."
+                "Deze samen-duo's zijn niet mogelijk: je hebt ${together.size} samen-duo's ingesteld, " +
+                    "maar bij $teamSize tegen $teamSize passen maximaal $maxTogether samen-duo's over twee even teams. " +
+                    "Ontkoppel minimaal ${together.size - maxTogether} samen-duo('s)."
             )
         }
+
+        val groups = mutableListOf<Group>()
+        together.forEach { groups.add(Group.Fixed(it)) }
+        for (p in players) {
+            if (p !in playerInDuo) groups.add(Group.Fixed(listOf(p)))
+        }
+        groups.addAll(separate)
+
         return Prepared.Groups(groups)
     }
 
-    private fun assignRandom(
-        groups: List<List<Long>>,
+    private fun backtrack(
+        groups: List<Group>,
         index: Int,
         teamA: MutableList<Long>,
         teamB: MutableList<Long>,
@@ -179,19 +186,40 @@ object TeamGenerator {
         if (index == groups.size) {
             return teamA.size == teamSize && teamB.size == teamSize
         }
-        val group = groups[index]
-        val tryFirstA = random.nextBoolean()
-        val targets = if (tryFirstA) listOf(teamA, teamB) else listOf(teamB, teamA)
 
-        for (target in targets) {
-            if (target.size + group.size <= teamSize) {
-                val added = group.size
-                target.addAll(group)
-                if (assignRandom(groups, index + 1, teamA, teamB, teamSize, random)) return true
-                repeat(added) { target.removeAt(target.lastIndex) }
+        when (val group = groups[index]) {
+            is Group.Fixed -> {
+                val size = group.players.size
+                val tryAFirst = random.nextBoolean()
+                val targets = if (tryAFirst) listOf(teamA, teamB) else listOf(teamB, teamA)
+                for (target in targets) {
+                    if (target.size + size <= teamSize) {
+                        target.addAll(group.players)
+                        if (backtrack(groups, index + 1, teamA, teamB, teamSize, random)) return true
+                        repeat(size) { target.removeAt(target.lastIndex) }
+                    }
+                }
+            }
+            is Group.Separate -> {
+                val aFirst = random.nextBoolean()
+                val orientations =
+                    if (aFirst) listOf(group.a to group.b, group.b to group.a)
+                    else listOf(group.b to group.a, group.a to group.b)
+                for ((toA, toB) in orientations) {
+                    if (teamA.size + 1 <= teamSize && teamB.size + 1 <= teamSize) {
+                        teamA.add(toA)
+                        teamB.add(toB)
+                        if (backtrack(groups, index + 1, teamA, teamB, teamSize, random)) return true
+                        teamA.removeAt(teamA.lastIndex)
+                        teamB.removeAt(teamB.lastIndex)
+                    }
+                }
             }
         }
         return false
     }
+
+    private const val INFEASIBLE =
+        "Geen geldige teamindeling mogelijk met deze duo-instellingen. Pas de duo's aan."
 }
 

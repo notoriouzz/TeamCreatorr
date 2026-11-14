@@ -3,7 +3,6 @@ package nl.tartaruzz.teamcreatorr.ui.screens.settings
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -28,10 +27,13 @@ import nl.tartaruzz.teamcreatorr.ui.components.NumberPicker
 import nl.tartaruzz.teamcreatorr.ui.components.SectionTitle
 import nl.tartaruzz.teamcreatorr.ui.viewmodel.SettingsViewModel
 import nl.tartaruzz.teamcreatorr.ui.viewmodel.appViewModel
+import nl.tartaruzz.teamcreatorr.util.AppPrefs
 import nl.tartaruzz.teamcreatorr.util.LanguagePrefs
+import nl.tartaruzz.teamcreatorr.util.ToastPosition
+import nl.tartaruzz.teamcreatorr.util.Toasts
 
 private data class ImportPreview(val json: String, val players: Int, val matches: Int, val duos: Int)
-private enum class ResetKind { ALL, MATCHES, PLAYERS, RANKING }
+private enum class ResetKind { ALL, MATCHES, PLAYERS }
 
 @Composable
 fun SettingsScreen() {
@@ -46,6 +48,10 @@ fun SettingsScreen() {
     var showConfirm by remember { mutableStateOf(false) }
     var resetKind by remember { mutableStateOf<ResetKind?>(null) }
     var importPreview by remember { mutableStateOf<ImportPreview?>(null) }
+
+    var darkMode by remember { mutableStateOf(AppPrefs.darkModeEnabled(context)) }
+    var toastEnabled by remember { mutableStateOf(AppPrefs.toastEnabled(context)) }
+    var toastPosition by remember { mutableStateOf(ToastPosition.fromKey(AppPrefs.toastPosition(context))) }
 
     LaunchedEffect(settings) {
         if (!initialized) {
@@ -65,7 +71,7 @@ fun SettingsScreen() {
                         true
                     }.getOrDefault(false)
                 } else false
-                Toast.makeText(context, context.getString(if (ok) R.string.export_success else R.string.export_failed), Toast.LENGTH_SHORT).show()
+                Toasts.show(context, if (ok) R.string.export_success else R.string.export_failed)
             }
         }
     }
@@ -77,7 +83,7 @@ fun SettingsScreen() {
             }.getOrNull()
             val parsed = json?.let { Backup.parse(it) }
             if (parsed == null) {
-                Toast.makeText(context, context.getString(R.string.import_invalid), Toast.LENGTH_SHORT).show()
+                Toasts.show(context, R.string.import_invalid)
             } else {
                 importPreview = ImportPreview(json!!, parsed.players.size, parsed.matches.size, parsed.duos.size)
             }
@@ -109,6 +115,92 @@ fun SettingsScreen() {
                                         (context as? Activity)?.recreate()
                                     },
                                     label = { Text(stringResource(labelRes)) }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                SectionTitle(stringResource(R.string.settings_appearance))
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            stringResource(R.string.settings_dark_mode_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                stringResource(R.string.settings_dark_mode),
+                                Modifier.weight(1f),
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Switch(
+                                checked = darkMode,
+                                onCheckedChange = {
+                                    darkMode = it
+                                    AppPrefs.setDarkMode(context, it)
+                                    (context as? Activity)?.recreate()
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            item {
+                SectionTitle(stringResource(R.string.settings_notifications))
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    stringResource(R.string.settings_toast_enabled),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    stringResource(R.string.settings_toast_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = toastEnabled,
+                                onCheckedChange = {
+                                    toastEnabled = it
+                                    AppPrefs.setToastEnabled(context, it)
+                                }
+                            )
+                        }
+                        Text(
+                            stringResource(R.string.settings_toast_position),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            ToastPosition.entries.forEach { pos ->
+                                val label = when (pos) {
+                                    ToastPosition.TOP -> stringResource(R.string.settings_toast_top)
+                                    ToastPosition.CENTER -> stringResource(R.string.settings_toast_middle)
+                                    ToastPosition.BOTTOM -> stringResource(R.string.settings_toast_bottom)
+                                }
+                                FilterChip(
+                                    selected = toastPosition == pos,
+                                    onClick = {
+                                        toastPosition = pos
+                                        AppPrefs.setToastPosition(context, pos.key)
+                                    },
+                                    label = { Text(label) }
                                 )
                             }
                         }
@@ -180,9 +272,6 @@ fun SettingsScreen() {
                         OutlinedButton(onClick = { resetKind = ResetKind.PLAYERS }, modifier = Modifier.fillMaxWidth()) {
                             Text(stringResource(R.string.settings_reset_players))
                         }
-                        OutlinedButton(onClick = { resetKind = ResetKind.RANKING }, modifier = Modifier.fillMaxWidth()) {
-                            Text(stringResource(R.string.settings_reset_ranking))
-                        }
                     }
                 }
             }
@@ -204,7 +293,7 @@ fun SettingsScreen() {
                 TextButton(onClick = {
                     vm.updateSettings(att, win, draw)
                     showConfirm = false
-                    Toast.makeText(context, context.getString(R.string.settings_points_update), Toast.LENGTH_SHORT).show()
+                    Toasts.show(context, R.string.settings_points_update)
                 }) { Text(stringResource(R.string.settings_apply)) }
             },
             dismissButton = { TextButton(onClick = { showConfirm = false }) { Text(stringResource(R.string.cancel)) } }
@@ -216,7 +305,6 @@ fun SettingsScreen() {
             ResetKind.ALL -> R.string.reset_confirm_all
             ResetKind.MATCHES -> R.string.reset_confirm_matches
             ResetKind.PLAYERS -> R.string.reset_confirm_players
-            ResetKind.RANKING -> R.string.reset_confirm_ranking
         }
         AlertDialog(
             onDismissRequest = { resetKind = null },
@@ -224,12 +312,11 @@ fun SettingsScreen() {
             text = { Text(stringResource(msgRes)) },
             confirmButton = {
                 TextButton(onClick = {
-                    val done = { Toast.makeText(context, context.getString(R.string.reset_done), Toast.LENGTH_SHORT).show() }
+                    val done = { Toasts.show(context, R.string.reset_done) }
                     when (kind) {
                         ResetKind.ALL -> vm.resetAll(done)
                         ResetKind.MATCHES -> vm.resetMatches(done)
                         ResetKind.PLAYERS -> vm.resetPlayers(done)
-                        ResetKind.RANKING -> vm.resetRanking(done)
                     }
                     resetKind = null
                 }) { Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error) }
@@ -251,7 +338,7 @@ fun SettingsScreen() {
             confirmButton = {
                 TextButton(onClick = {
                     vm.importBackup(p.json, replace = true) { result ->
-                        Toast.makeText(context, context.getString(if (result is Repository.ImportResult.Success) R.string.import_success else R.string.import_failed), Toast.LENGTH_SHORT).show()
+                        Toasts.show(context, if (result is Repository.ImportResult.Success) R.string.import_success else R.string.import_failed)
                     }
                     importPreview = null
                 }) { Text(stringResource(R.string.import_mode_replace)) }
@@ -259,7 +346,7 @@ fun SettingsScreen() {
             dismissButton = {
                 TextButton(onClick = {
                     vm.importBackup(p.json, replace = false) { result ->
-                        Toast.makeText(context, context.getString(if (result is Repository.ImportResult.Success) R.string.import_success else R.string.import_failed), Toast.LENGTH_SHORT).show()
+                        Toasts.show(context, if (result is Repository.ImportResult.Success) R.string.import_success else R.string.import_failed)
                     }
                     importPreview = null
                 }) { Text(stringResource(R.string.import_mode_merge)) }

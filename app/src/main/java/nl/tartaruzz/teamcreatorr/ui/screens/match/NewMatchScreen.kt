@@ -1,7 +1,6 @@
 package nl.tartaruzz.teamcreatorr.ui.screens.match
 
 import android.app.DatePickerDialog
-import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -35,6 +34,7 @@ import nl.tartaruzz.teamcreatorr.ui.theme.TeamBColor
 import nl.tartaruzz.teamcreatorr.ui.viewmodel.NewMatchViewModel
 import nl.tartaruzz.teamcreatorr.ui.viewmodel.appViewModel
 import nl.tartaruzz.teamcreatorr.util.Formatters
+import nl.tartaruzz.teamcreatorr.util.Toasts
 import java.util.Calendar
 
 @Composable
@@ -106,13 +106,14 @@ fun NewMatchScreen(onBack: () -> Unit) {
                 players = players,
                 disabledDuoIds = state.disabledDuoIds,
                 onToggleDuo = { vm.toggleDuo(it) },
-                onAdd = { a, b ->
-                    vm.addDuo(a, b) { result ->
+                onAdd = { a, b, mode ->
+                    vm.addDuo(a, b, mode) { result ->
                         if (result is nl.tartaruzz.teamcreatorr.data.Repository.DuoResult.Error) {
-                            Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
+                            Toasts.show(context, result.message)
                         }
                     }
                 },
+                onModeChange = { id, mode -> vm.setDuoMode(id, mode) },
                 onRemove = { vm.removeDuo(it) }
             )
         }

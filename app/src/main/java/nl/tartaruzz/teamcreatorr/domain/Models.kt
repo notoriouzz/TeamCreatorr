@@ -113,7 +113,28 @@ data class MatchDetail(
 data class DuoWithNames(
     val id: Long,
     val playerA: PlayerRef,
-    val playerB: PlayerRef
+    val playerB: PlayerRef,
+    val mode: DuoMode = DuoMode.TOGETHER
+)
+
+/** How a duo influences team generation. */
+enum class DuoMode(val code: Int) {
+    /** Both players must end up in the same team. */
+    TOGETHER(0),
+
+    /** Both players must end up in different teams. */
+    SEPARATE(1);
+
+    companion object {
+        fun fromCode(code: Int): DuoMode = entries.firstOrNull { it.code == code } ?: TOGETHER
+    }
+}
+
+/** A single team-generation constraint produced by a duo. */
+data class DuoConstraint(
+    val playerAId: Long,
+    val playerBId: Long,
+    val mode: DuoMode
 )
 
 /** One entry in a player's personal match history. */

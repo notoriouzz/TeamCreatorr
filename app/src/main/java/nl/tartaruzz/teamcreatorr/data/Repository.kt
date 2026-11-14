@@ -5,6 +5,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import nl.tartaruzz.teamcreatorr.domain.DuoConstraint
+import nl.tartaruzz.teamcreatorr.domain.DuoMode
 import nl.tartaruzz.teamcreatorr.domain.DuoWithNames
 import nl.tartaruzz.teamcreatorr.domain.MatchDetail
 import nl.tartaruzz.teamcreatorr.domain.MatchStatus
@@ -74,7 +76,8 @@ class Repository(private val db: TeamCreatorrDatabase) {
                 DuoWithNames(
                     id = duo.id,
                     playerA = PlayerRef(a.id, a.name, a.nickname),
-                    playerB = PlayerRef(b.id, b.name, b.nickname)
+                    playerB = PlayerRef(b.id, b.name, b.nickname),
+                    mode = DuoMode.fromCode(duo.mode)
                 )
             }
         }
@@ -84,7 +87,7 @@ class Repository(private val db: TeamCreatorrDatabase) {
         data class Error(val message: String) : DuoResult
     }
 
-    suspend fun addDuo(playerAId: Long, playerBId: Long): DuoResult {
+    suspend fun addDuo(playerAId: Long, playerBId: Long, mode: DuoMode): DuoResult {
         if (playerAId == playerBId) return DuoResult.Error("Kies twee verschillende spelers.")
         val duos = db.duoDao().observeAll().first()
         val used = mutableSetOf<Long>()
@@ -99,8 +102,12 @@ class Repository(private val db: TeamCreatorrDatabase) {
         val b = db.playerDao().observeById(playerBId).first()
         if (a == null || b == null) return DuoResult.Error("Speler niet gevonden.")
         if (!a.active || !b.active) return DuoResult.Error("Beide spelers moeten actief zijn.")
-        db.duoDao().insert(DuoEntity(playerAId = playerAId, playerBId = playerBId))
+        db.duoDao().insert(DuoEntity(playerAId = playerAId, playerBId = playerBId, mode = mode.code))
         return DuoResult.Success
+    }
+
+    suspend fun setDuoMode(id: Long, mode: DuoMode) {
+        db.duoDao().updateMode(id, mode.code)
     }
 
     suspend fun removeDuo(id: Long) {
@@ -194,7 +201,7 @@ class Repository(private val db: TeamCreatorrDatabase) {
         teamSize: Int,
         teamA: List<Long>,
         teamB: List<Long>,
-        duos: List<Pair<Long, Long>>
+        duos: List<DuoConstraint>
     ): Long = db.withTransaction {
         val matchId = db.matchDao().insert(
             MatchEntity(date = date, teamSize = teamSize, status = 0)
@@ -203,7 +210,9 @@ class Repository(private val db: TeamCreatorrDatabase) {
             teamB.map { MatchPlayerEntity(matchId, it, "B") }
         db.matchPlayerDao().insertAll(entries)
         if (duos.isNotEmpty()) {
-            db.matchDuoDao().insertAll(duos.map { MatchDuoEntity(matchId, it.first, it.second) })
+            db.matchDuoDao().insertAll(
+                duos.map { MatchDuoEntity(matchId, it.playerAId, it.playerBId, it.mode.code) }
+            )
         }
         matchId
     }
@@ -379,13 +388,13 @@ class Repository(private val db: TeamCreatorrDatabase) {
             for (d in payload.duos) {
                 val a = playerIdMap[d.playerAId] ?: continue
                 val b = playerIdMap[d.playerBId] ?: continue
-                db.duoDao().insert(DuoEntity(playerAId = a, playerBId = b))
+                db.duoDao().insert(DuoEntity(playerAId = a, playerBId = b, mode = d.mode))
             }
             for (d in payload.matchDuos) {
                 val a = playerIdMap[d.playerAId] ?: continue
                 val b = playerIdMap[d.playerBId] ?: continue
                 val mid = matchIdMap[d.matchId] ?: continue
-                db.matchDuoDao().insertAll(listOf(MatchDuoEntity(mid, a, b)))
+                db.matchDuoDao().insertAll(listOf(MatchDuoEntity(mid, a, b, d.mode)))
             }
             for (a in payload.adjustments) {
                 val pid = playerIdMap[a.playerId] ?: continue
@@ -416,9 +425,5 @@ class Repository(private val db: TeamCreatorrDatabase) {
         db.duoDao().deleteAll()
         db.pointAdjustmentDao().deleteAll()
         db.playerDao().deleteAll()
-    }
-
-    suspend fun resetRanking() = db.withTransaction {
-        db.pointAdjustmentDao().deleteAll()
     }
 }

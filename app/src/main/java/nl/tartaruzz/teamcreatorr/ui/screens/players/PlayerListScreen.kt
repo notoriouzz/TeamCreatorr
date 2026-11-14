@@ -1,6 +1,5 @@
 package nl.tartaruzz.teamcreatorr.ui.screens.players
 
-import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
@@ -32,6 +31,7 @@ import nl.tartaruzz.teamcreatorr.ui.components.AppHeader
 import nl.tartaruzz.teamcreatorr.ui.components.PlayerAvatar
 import nl.tartaruzz.teamcreatorr.ui.viewmodel.PlayerListViewModel
 import nl.tartaruzz.teamcreatorr.ui.viewmodel.appViewModel
+import nl.tartaruzz.teamcreatorr.util.Toasts
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -119,7 +119,7 @@ fun PlayerListScreen(onOpenPlayer: (Long) -> Unit) {
             onConfirm = { names ->
                 vm.addMany(names)
                 showBulk = false
-                Toast.makeText(context, context.getString(R.string.players_added), Toast.LENGTH_SHORT).show()
+                Toasts.show(context, R.string.players_added)
             }
         )
     }
@@ -145,7 +145,7 @@ fun PlayerListScreen(onOpenPlayer: (Long) -> Unit) {
             confirmButton = {
                 TextButton(onClick = {
                     vm.deleteMany(selectedIds.toList()) {
-                        Toast.makeText(context, context.getString(R.string.players_deleted), Toast.LENGTH_SHORT).show()
+                        Toasts.show(context, R.string.players_deleted)
                     }
                     selectedIds = emptySet()
                     showDeleteSelection = false

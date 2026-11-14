@@ -56,6 +56,7 @@ object Backup {
             p.duos.forEach { d ->
                 put(JSONObject().apply {
                     put("id", d.id); put("playerAId", d.playerAId); put("playerBId", d.playerBId)
+                    put("mode", d.mode)
                 })
             }
         })
@@ -63,6 +64,7 @@ object Backup {
             p.matchDuos.forEach { d ->
                 put(JSONObject().apply {
                     put("matchId", d.matchId); put("playerAId", d.playerAId); put("playerBId", d.playerBId)
+                    put("mode", d.mode)
                 })
             }
         })
@@ -112,10 +114,10 @@ object Backup {
             MatchPlayerEntity(o.getLong("matchId"), o.getLong("playerId"), o.getString("team"))
         }
         val duos = root.getJSONArray("duos").mapArr { o ->
-            DuoEntity(o.getLong("id"), o.getLong("playerAId"), o.getLong("playerBId"))
+            DuoEntity(o.getLong("id"), o.getLong("playerAId"), o.getLong("playerBId"), o.optInt("mode", 0))
         }
         val matchDuos = root.getJSONArray("matchDuos").mapArr { o ->
-            MatchDuoEntity(o.getLong("matchId"), o.getLong("playerAId"), o.getLong("playerBId"))
+            MatchDuoEntity(o.getLong("matchId"), o.getLong("playerAId"), o.getLong("playerBId"), o.optInt("mode", 0))
         }
         val adjustments = root.getJSONArray("pointAdjustments").mapArr { o ->
             PointAdjustmentEntity(

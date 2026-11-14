@@ -119,6 +119,9 @@ interface DuoDao {
     @Insert
     suspend fun insert(duo: DuoEntity): Long
 
+    @Query("UPDATE duos SET mode = :mode WHERE id = :id")
+    suspend fun updateMode(id: Long, mode: Int)
+
     @Query("DELETE FROM duos WHERE id = :id")
     suspend fun deleteById(id: Long)
 

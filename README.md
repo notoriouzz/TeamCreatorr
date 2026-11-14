@@ -20,12 +20,15 @@ internetverbinding nodig.
 - **Meertalig**: Nederlands (standaard), Engels en Turks.
 - **Zwevende pill-navigatie** met vijf pictogrammen: Home, Spelers, Wedstrijd, Ranking
   en Instellingen.
-- **Wedstrijden**: automatische, eerlijke teamindeling (met optionele duo's), uitslagen
-  invoeren met numerieke scrollers en teamindeling delen.
+- **Wedstrijden**: automatische, eerlijke teamindeling (met optionele duo's die samen of
+  juist gescheiden moeten worden ingedeeld), uitslagen invoeren met numerieke scrollers en
+  teamindeling delen.
 - **Spelers**: profielfoto's, nicknames, uitgebreide statistieken en een selectiesysteem
   om meerdere spelers tegelijk te beheren.
 - **Back-up & herstel**: exporteer en importeer alle gegevens als JSON-bestand.
-- **Resetopties**: alles, wedstrijdgeschiedenis, spelers of ranking.
+- **Resetopties**: alles, wedstrijdgeschiedenis of spelers.
+- **Donkere modus**: schakelbaar in Instellingen en blijvend opgeslagen.
+- **Toast-meldingen**: instelbare positie (boven, midden, onder) en aan/uit.
 - **Uniforme, sportieve vormgeving** met een groene huisstijl.
 
 ---
@@ -94,4 +97,4 @@ Zie [docs/GEBRUIKERSHANDLEIDING.md](docs/GEBRUIKERSHANDLEIDING.md).
 
 ## Versie
 
-Huidige versie: **1.3.1** (zie [CHANGELOG.md](CHANGELOG.md)).
+Huidige versie: **1.5.0** (zie [CHANGELOG.md](CHANGELOG.md)).

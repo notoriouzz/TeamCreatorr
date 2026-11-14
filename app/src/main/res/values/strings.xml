@@ -184,13 +184,27 @@
     <string name="ko_fi_body">A lot of time and effort goes into making TeamCreatorr better. If you enjoy using the app, why not fuel the next update with a coffee? No pressure, just appreciation!</string>
     <string name="ko_fi_link">Buy me a coffee on Ko-fi</string>
     <string name="settings_about">Over</string>
-    <string name="settings_about_text">TeamCreatorr v1.4.0\nTeams &amp; Ranking.\nAlle gegevens worden lokaal op dit apparaat opgeslagen.</string>
+    <string name="settings_about_text">TeamCreatorr v1.5.0\nTeams &amp; Ranking.\nAlle gegevens worden lokaal op dit apparaat opgeslagen.</string>
+
+    <!-- Weergave -->
+    <string name="settings_appearance">Weergave</string>
+    <string name="settings_dark_mode">Donkere modus</string>
+    <string name="settings_dark_mode_desc">Schakel tussen een lichte en donkere weergave van de app.</string>
+
+    <!-- Meldingen -->
+    <string name="settings_notifications">Meldingen</string>
+    <string name="settings_toast_enabled">Toast-meldingen</string>
+    <string name="settings_toast_desc">Toon korte bevestigingen tijdens het gebruik van de app.</string>
+    <string name="settings_toast_position">Positie</string>
+    <string name="settings_toast_top">Boven</string>
+    <string name="settings_toast_middle">Midden</string>
+    <string name="settings_toast_bottom">Onder</string>
+
     <string name="settings_reset">Reset</string>
     <string name="settings_reset_desc">Verwijder gegevens uit de app.</string>
     <string name="settings_reset_all">Alles resetten</string>
     <string name="settings_reset_matches">Alleen wedstrijdgeschiedenis resetten</string>
     <string name="settings_reset_players">Alleen spelers resetten</string>
-    <string name="settings_reset_ranking">Alleen ranking resetten</string>
 
     <!-- Taal -->
     <string name="lang_dutch">Nederlands</string>
@@ -216,7 +230,6 @@
     <string name="reset_confirm_all">Weet je zeker dat je ALLES wilt resetten? Alle spelers, wedstrijden, duo\'s en instellingen worden definitief verwijderd.</string>
     <string name="reset_confirm_matches">Weet je zeker dat je alle wedstrijdgeschiedenis wilt verwijderen? Spelers blijven behouden.</string>
     <string name="reset_confirm_players">Weet je zeker dat je alle spelers wilt verwijderen? Ook wedstrijden, duo\'s en ranking verdwijnen.</string>
-    <string name="reset_confirm_ranking">Weet je zeker dat je de ranking wilt resetten? Handmatige puntmutaties worden verwijderd. Wedstrijdgeschiedenis en spelers blijven behouden.</string>
     <string name="reset_done">Reset uitgevoerd</string>
 
     <!-- Algemeen -->

@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import nl.tartaruzz.teamcreatorr.data.PlayerEntity
 import nl.tartaruzz.teamcreatorr.data.Repository
+import nl.tartaruzz.teamcreatorr.domain.DuoConstraint
+import nl.tartaruzz.teamcreatorr.domain.DuoMode
 import nl.tartaruzz.teamcreatorr.domain.DuoWithNames
 import nl.tartaruzz.teamcreatorr.domain.MatchDetail
 import nl.tartaruzz.teamcreatorr.domain.TeamGenerator
@@ -88,9 +90,9 @@ class NewMatchViewModel(private val repo: Repository) : ViewModel() {
         _state.value = current.copy(disabledDuoIds = disabled, teamA = emptyList(), teamB = emptyList(), generationError = null)
     }
 
-    fun addDuo(a: Long, b: Long, onResult: (Repository.DuoResult) -> Unit) {
+    fun addDuo(a: Long, b: Long, mode: DuoMode, onResult: (Repository.DuoResult) -> Unit) {
         viewModelScope.launch {
-            val result = repo.addDuo(a, b)
+            val result = repo.addDuo(a, b, mode)
             if (result is Repository.DuoResult.Success) {
                 _state.value = _state.value.copy(teamA = emptyList(), teamB = emptyList(), generationError = null)
             }
@@ -98,15 +100,20 @@ class NewMatchViewModel(private val repo: Repository) : ViewModel() {
         }
     }
 
+    fun setDuoMode(id: Long, mode: DuoMode) {
+        _state.value = _state.value.copy(teamA = emptyList(), teamB = emptyList(), generationError = null)
+        viewModelScope.launch { repo.setDuoMode(id, mode) }
+    }
+
     fun removeDuo(id: Long) {
         _state.value = _state.value.copy(teamA = emptyList(), teamB = emptyList(), generationError = null)
         viewModelScope.launch { repo.removeDuo(id) }
     }
 
-    fun effectiveDuos(): List<Pair<Long, Long>> =
+    fun effectiveDuos(): List<DuoConstraint> =
         duos.value
             .filter { it.id !in _state.value.disabledDuoIds }
-            .map { it.playerA.id to it.playerB.id }
+            .map { DuoConstraint(it.playerA.id, it.playerB.id, it.mode) }
 
     fun generateTeams() {
         val current = _state.value

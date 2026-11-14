@@ -162,13 +162,27 @@
     <string name="ko_fi_body">A lot of time and effort goes into making TeamCreatorr better. If you enjoy using the app, why not fuel the next update with a coffee? No pressure, just appreciation!</string>
     <string name="ko_fi_link">Buy me a coffee on Ko-fi</string>
     <string name="settings_about">About</string>
-    <string name="settings_about_text">TeamCreatorr v1.4.0\nTeams &amp; Ranking.\nAll data is stored locally on this device.</string>
+    <string name="settings_about_text">TeamCreatorr v1.5.0\nTeams &amp; Ranking.\nAll data is stored locally on this device.</string>
+
+    <!-- Appearance -->
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_dark_mode">Dark mode</string>
+    <string name="settings_dark_mode_desc">Switch between a light and dark appearance for the app.</string>
+
+    <!-- Notifications -->
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_toast_enabled">Toast messages</string>
+    <string name="settings_toast_desc">Show short confirmations while using the app.</string>
+    <string name="settings_toast_position">Position</string>
+    <string name="settings_toast_top">Top</string>
+    <string name="settings_toast_middle">Middle</string>
+    <string name="settings_toast_bottom">Bottom</string>
+
     <string name="settings_reset">Reset</string>
     <string name="settings_reset_desc">Delete data from the app.</string>
     <string name="settings_reset_all">Reset everything</string>
     <string name="settings_reset_matches">Reset match history only</string>
     <string name="settings_reset_players">Reset players only</string>
-    <string name="settings_reset_ranking">Reset ranking only</string>
     <string name="lang_dutch">Nederlands</string>
     <string name="lang_english">English</string>
     <string name="lang_turkish">Türkçe</string>
@@ -188,7 +202,6 @@
     <string name="reset_confirm_all">Are you sure you want to reset EVERYTHING? All players, matches, duos and settings will be permanently deleted.</string>
     <string name="reset_confirm_matches">Are you sure you want to delete all match history? Players will be kept.</string>
     <string name="reset_confirm_players">Are you sure you want to delete all players? Matches, duos and ranking will also be removed.</string>
-    <string name="reset_confirm_ranking">Are you sure you want to reset the ranking? Manual point adjustments will be removed. Match history and players will be kept.</string>
     <string name="reset_done">Reset completed</string>
     <string name="back">Back</string>
     <string name="save">Save</string>

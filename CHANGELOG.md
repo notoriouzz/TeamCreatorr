@@ -4,6 +4,18 @@ Alle noemenswaardige wijzigingen aan TeamCreatorr worden hier bijgehouden.
 
 Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1.0/).
 
+## [1.5.0] - 2026-11-14
+
+### Toegevoegd
+- Donkere modus met schakelaar in Instellingen; keuze wordt direct toegepast en blijvend opgeslagen.
+- Toast-instellingen in Instellingen: aan/uit, positie (boven, midden, onder) en een kortere, consistente weergaveduur.
+- Duo's kunnen nu per duo worden ingesteld als "samen in hetzelfde team" of "niet samen in hetzelfde team".
+
+### Gewijzigd
+- Toast-meldingen verschijnen standaard bovenaan het scherm en respecteren de gekozen positie en aan/uit-voorkeur.
+- Teamgenerator houdt rekening met zowel "samen"- als "gescheiden"-duo's en valideert tegenstrijdige of onmogelijke combinaties.
+- Optie "Alleen ranking resetten" verwijderd; ranking wordt via wedstrijdgeschiedenis automatisch herberekend.
+
 ## [1.4.0] - 2026-11-13
 
 ### Toegevoegd

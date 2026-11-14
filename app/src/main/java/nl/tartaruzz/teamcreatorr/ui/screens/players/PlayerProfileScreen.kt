@@ -1,7 +1,6 @@
 package nl.tartaruzz.teamcreatorr.ui.screens.players
 
 import android.graphics.BitmapFactory
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -48,6 +47,7 @@ import nl.tartaruzz.teamcreatorr.ui.viewmodel.PlayerProfileViewModel
 import nl.tartaruzz.teamcreatorr.ui.viewmodel.appViewModel
 import nl.tartaruzz.teamcreatorr.util.Formatters
 import nl.tartaruzz.teamcreatorr.util.PhotoStore
+import nl.tartaruzz.teamcreatorr.util.Toasts
 import java.io.File
 
 private enum class HistoryFilter(val label: String) {
@@ -82,7 +82,7 @@ fun PlayerProfileScreen(
                     null
                 }
                 if (fileName != null) vm.updatePhoto(playerId, fileName)
-                else Toast.makeText(context, "Foto kon niet worden geladen", Toast.LENGTH_SHORT).show()
+                else Toasts.show(context, "Foto kon niet worden geladen")
             }
         }
     }
